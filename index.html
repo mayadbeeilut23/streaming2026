@@ -152,7 +152,12 @@ body{
   <div class="grid">
     <button class="pill" type="button" onclick="start(2)">Tingkatan 2</button>
     <button class="pill" type="button" onclick="start(3)">Tingkatan 3</button>
+
+    <!-- ✅ menu buku (yang hilang tadi) -->
+    <button class="pill secondary" type="button" onclick="openSenaraiBuku()">Senarai Pembelian Buku</button>
   </div>
+
+  <div class="tiny">Tip: No IC tanpa simbol -</div>
 </section>
 
 <!-- INPUT -->
@@ -196,7 +201,7 @@ body{
   </div>
 </section>
 
-<!-- ERROR (optional, kalau nak elak alert) -->
+<!-- ERROR -->
 <section id="error" class="screen">
   <div class="errorBox" id="errorMsg">Ada masalah.</div>
   <div class="row" style="margin-top:14px;">
@@ -208,6 +213,10 @@ body{
 
 <script>
 const apiUrl="https://script.google.com/macros/s/AKfycbxJzukkZf4P8Y8cA3WrSVp6ISkvXhMgsqzjVElhfW4_SBPafEt0_lsnkCM17_NF1SsO/exec";
+
+/* ✅ tukar nama ikut file dalam repo you */
+const SENARAI_BUKU_URL = "senarai_pembelian_buku.pdf";
+
 let tingkatan=null;
 
 function show(id){
@@ -231,6 +240,10 @@ function start(t){
   setTimeout(()=>document.getElementById("ic").focus(),80);
 }
 
+function openSenaraiBuku(){
+  window.open(SENARAI_BUKU_URL, "_blank");
+}
+
 function cleanIC(v){ return (v||"").replace(/\D/g,""); }
 
 function esc(s){
@@ -243,7 +256,6 @@ function esc(s){
 }
 
 function showError(msg){
-  // kalau you suka alert, tukar ke alert(msg)
   document.getElementById("errorMsg").textContent = msg || "Ada masalah.";
   show("error");
 }
@@ -263,7 +275,6 @@ async function semak(){
     return;
   }
 
-  // ✅ show loading comel
   show("loading");
 
   const url=`${apiUrl}?ting=${encodeURIComponent(tingkatan)}&mode=kelas&ic=${encodeURIComponent(ic)}`;
