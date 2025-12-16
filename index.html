@@ -128,36 +128,97 @@ input{
 </div>
 
 <script>
-const API="PASTE_APPS_SCRIPT_URL_DI_SINI";
-let ting=null;
+const apiUrl = "https://script.google.com/macros/s/AKfycbw-Ptinh6OwlWtPhU7_BACIZi1AXKJ6ibOsVj_tHA80zHWMFH0b1CygYfhhABt2cbT4vQ/exec";
+const SENARAI_BUKU_URL = "panduan_kelas_t2.pdf";
 
-function show(id){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+let selectedTing = null;
+
+/* ===== SCREEN CONTROL ===== */
+function go(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
+
+function goHome(){
+  selectedTing = null;
+  document.getElementById("ic").value = "";
+  go("home");
+}
+
+/* ===== START SEMAK ===== */
 function startSemak(t){
-  ting=t;
-  document.getElementById("badgeTing").innerText="Tingkatan "+t;
-  show("input");
+  selectedTing = t;
+  document.getElementById("badgeTing").innerText = "Tingkatan " + t;
+  document.getElementById("ic").value = "";
+  go("input");
 }
-function goHome(){show("home")}
-function submitCheck(){
-  const ic=document.getElementById("ic").value.replace(/\D/g,"");
-  if(ic.length!==12){alert("IC mesti 12 digit");return;}
-  fetch(`${API}?ting=${ting}&ic=${ic}`)
-    .then(r=>r.json())
-    .then(d=>{
-      let h="";
-      h+=row("Nama",d.nama);
-      h+=row("Jantina",d.jantina);
-      h+=row("Bangsa",d.bangsa);
-      document.getElementById("resultBox").innerHTML=h;
-      show("result");
-    });
+
+/* ===== INPUT CLEAN ===== */
+function cleanIC(v){
+  return (v || "").replace(/\D/g,"");
 }
-function row(l,v){
-  return `<div class="field"><div class="label">${l}</div><div class="value">${v||"-"}</div></div>`;
+
+/* ===== SUBMIT ===== */
+async function submitCheck(){
+  const icInput = document.getElementById("ic");
+  const ic = cleanIC(icInput.value);
+  icInput.value = ic;
+
+  if(!selectedTing){
+    showError("Sila pilih Tingkatan.");
+    return;
+  }
+
+  if(ic.length !== 12){
+    showError("No IC mesti 12 digit.");
+    return;
+  }
+
+  go("loading");
+
+  try{
+    const url = apiUrl + "?ting=" + selectedTing + "&mode=kelas&ic=" + ic;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if(!data || data.ok === false){
+      showError(data?.message || "Rekod tidak dijumpai.");
+      return;
+    }
+
+    showResult(data);
+
+  }catch(err){
+    showError("Ralat sambungan server.");
+    console.error(err);
+  }
+}
+
+/* ===== RESULT ===== */
+function showResult(data){
+  const box = document.getElementById("resultBox");
+  box.innerHTML = `
+    <div class="field"><div class="label">Nama Pelajar</div><div class="value">${data.nama || "-"}</div></div>
+    <div class="field"><div class="label">Jantina</div><div class="value">${data.jantina || "-"}</div></div>
+    <div class="field"><div class="label">Bangsa</div><div class="value">${data.bangsa || "-"}</div></div>
+    <div class="field"><div class="label">KDK</div><div class="value">${data.kdk || "-"}</div></div>
+    <div class="field"><div class="label">KDT</div><div class="value">${data.kdt || "-"}</div></div>
+    <div class="field"><div class="label">Kelas 2025</div><div class="value">${data.kelas_2025 || "-"}</div></div>
+    <div class="field"><div class="label">Kelas 2026</div><div class="value">${data.kelas_2026 || "-"}</div></div>
+    <div class="field"><div class="label">Guru Tingkatan 2026</div><div class="value">${data.guru_tingkatan_2026 || "-"}</div></div>
+  `;
+  go("result");
+}
+
+/* ===== ERROR ===== */
+function showError(msg){
+  document.getElementById("errorMsg").innerText = msg;
+  go("error");
+}
+
+/* ===== BUKU ===== */
+function openSenaraiBuku(){
+  window.open(SENARAI_BUKU_URL,"_blank");
 }
 </script>
-</body>
-</html>
+
