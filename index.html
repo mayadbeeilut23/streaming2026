@@ -101,15 +101,22 @@ body{
 
 <!-- INPUT -->
 <section id="input" class="screen">
-  <h2 class="title" id="tingLabel"></h2>
-  <div class="card">
-    <input id="ic" class="input" placeholder="No IC 12 digit">
+  <div class="header">
+    <div class="badge" id="badgeTing">Tingkatan</div>
+    <h2 class="title" style="font-size:1.25rem;margin:0;">Masukkan No IC</h2>
+    <p class="subtitle" style="margin:8px 0 0;">Contoh: 051234567890 (12 digit)</p>
+  </div>
+
+  <div class="input-wrap">
+    <input id="ic" class="input" inputmode="numeric" maxlength="14" placeholder="No IC 12 digit (tanpa -)">
     <div class="row">
-      <button class="pill" onclick="semak()">Semak</button>
+      <button class="pill" onclick="submitCheck()">Semak</button>
       <button class="pill secondary" onclick="goHome()">Kembali</button>
     </div>
   </div>
 </section>
+
+
 
 <!-- RESULT -->
 <section id="result" class="screen">
