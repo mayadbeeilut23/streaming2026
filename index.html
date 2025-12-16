@@ -22,12 +22,12 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
+  padding:24px;
+  color:var(--text);
 }
 .container{max-width:520px;width:100%}
-  .header{
-  text-align:center;
-  margin-bottom:18px;
-}
+
+.header{ text-align:center; margin-bottom:18px; }
 
 .badge{
   display:inline-block;
@@ -44,7 +44,7 @@ body{
   border-radius:22px;
   padding:18px;
   box-shadow:0 10px 30px rgba(0,0,0,.08);
-  overflow:hidden;
+  overflow:hidden; /* fix pill overflow */
 }
 
 .input{
@@ -54,8 +54,8 @@ body{
   border:2px solid var(--primary);
   font-size:1rem;
   outline:none;
+  box-sizing:border-box;
 }
-
 .input:focus{ border-color:#ff9bb5; }
 
 .row{display:flex; gap:12px; margin-top:14px;}
@@ -63,25 +63,36 @@ body{
 
 .screen{display:none}
 .screen.active{display:block}
-.logo{background:#fff;width:120px;height:120px;margin:0 auto 16px;
-  border-radius:22px;display:flex;align-items:center;justify-content:center}
-.logo img{width:90px}
-.title{text-align:center;font-weight:800}
-.subtitle{text-align:center;color:#666}
+
+.logo{
+  background:#fff;width:120px;height:120px;margin:0 auto 16px;
+  border-radius:22px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+.logo img{width:90px;height:auto;display:block}
+
+.title{text-align:center;font-weight:800;margin:0}
+.subtitle{text-align:center;color:#666;margin:8px 0 0}
+
 .pill{
-  width:100%;border:none;border-radius:999px;
-  padding:16px;font-weight:800;cursor:pointer;
-  background:linear-gradient(135deg,var(--primary),var(--secondary))
+  width:100%;
+  border:none;
+  border-radius:999px;
+  padding:16px;
+  font-weight:800;
+  cursor:pointer;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:var(--text);
 }
 .pill.secondary{background:#eee}
+
 .grid{display:flex;flex-direction:column;gap:12px}
-.card{background:#fff;border-radius:22px;padding:18px;margin-top:10px}
-.input{width:100%;padding:14px;border-radius:999px;border:2px solid var(--primary)}
-.row{display:flex;gap:12px;margin-top:14px}
-.row .pill{flex:1}
+
+.card{background:#fff;border-radius:22px;padding:18px;margin-top:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);}
+
 .field{padding:10px 0;border-bottom:1px solid #eee}
 .field:last-child{border-bottom:none}
-.label{font-size:.75rem;font-weight:900;color:#888}
+.label{font-size:.75rem;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:.3px}
 .value{font-size:1.05rem;font-weight:800}
 </style>
 </head>
@@ -94,9 +105,9 @@ body{
   <div class="logo"><img src="logopaloh.png" alt="Logo SMK Paloh"></div>
   <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
   <p class="subtitle">Pilih Tingkatan → Masuk No IC → Papar Keputusan</p>
-  <div class="grid">
-    <button class="pill" onclick="start(2)">Tingkatan 2</button>
-    <button class="pill" onclick="start(3)">Tingkatan 3</button>
+  <div class="grid" style="margin-top:18px;">
+    <button class="pill" type="button" onclick="start(2)">Tingkatan 2</button>
+    <button class="pill" type="button" onclick="start(3)">Tingkatan 3</button>
   </div>
 </section>
 
@@ -104,27 +115,32 @@ body{
 <section id="input" class="screen">
   <div class="header">
     <div class="badge" id="badgeTing">Tingkatan</div>
-    <h2 class="title" style="font-size:1.25rem;margin:0;">Masukkan No IC</h2>
-    <p class="subtitle" style="margin:8px 0 0;">Contoh: 051234567890 (12 digit)</p>
+    <h2 class="title" style="font-size:1.25rem;">Masukkan No IC</h2>
+    <p class="subtitle">Contoh: 051234567890 (12 digit)</p>
   </div>
 
   <div class="input-wrap">
     <input id="ic" class="input" inputmode="numeric" maxlength="14" placeholder="No IC 12 digit (tanpa -)">
     <div class="row">
-      <button class="pill" onclick="submitCheck()">Semak</button>
-      <button class="pill secondary" onclick="goHome()">Kembali</button>
+      <!-- ✅ FIX: panggil semak() -->
+      <button class="pill" type="button" onclick="semak()">Semak</button>
+      <button class="pill secondary" type="button" onclick="goHome()">Kembali</button>
     </div>
   </div>
 </section>
 
-
-
 <!-- RESULT -->
 <section id="result" class="screen">
-  <h2 class="title">Keputusan</h2>
+  <div class="header">
+    <div class="badge" id="badgeResult">Keputusan</div>
+    <h2 class="title" style="font-size:1.25rem;">Papar Maklumat</h2>
+    <p class="subtitle">Berjaya! Maklumat dijumpai.</p>
+  </div>
+
   <div id="resultBox" class="card"></div>
-  <div class="row">
-    <button class="pill secondary" onclick="goHome()">Kembali (Main Page)</button>
+
+  <div class="row" style="margin-top:14px;">
+    <button class="pill secondary" type="button" onclick="goHome()">Kembali (Main Page)</button>
   </div>
 </section>
 
@@ -136,38 +152,80 @@ let tingkatan=null;
 
 function show(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+  const el=document.getElementById(id);
+  if(el) el.classList.add("active");
 }
-function goHome(){show("home")}
+
+function goHome(){
+  tingkatan=null;
+  document.getElementById("ic").value="";
+  show("home");
+}
+
 function start(t){
   tingkatan=t;
-  document.getElementById("tingLabel").innerText="Tingkatan "+t;
+  // ✅ FIX: id yang betul = badgeTing
+  document.getElementById("badgeTing").innerText="Tingkatan "+t;
   document.getElementById("ic").value="";
   show("input");
+  setTimeout(()=>document.getElementById("ic").focus(),80);
 }
-function cleanIC(v){return v.replace(/\D/g,"")}
+
+function cleanIC(v){ return (v||"").replace(/\D/g,""); }
+
+function esc(s){
+  return String(s ?? "-")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
 
 async function semak(){
-  const ic=cleanIC(document.getElementById("ic").value);
-  if(ic.length!==12){alert("No IC mesti 12 digit");return;}
+  if(!tingkatan){
+    alert("Sila pilih Tingkatan dahulu.");
+    return;
+  }
 
-  const url=`${apiUrl}?ting=${tingkatan}&mode=kelas&ic=${ic}`;
-  const res=await fetch(url);
-  const data=await res.json();
+  const icEl=document.getElementById("ic");
+  const ic=cleanIC(icEl.value);
+  icEl.value=ic;
 
-  if(!data.ok){alert(data.message);return;}
+  if(ic.length!==12){
+    alert("No IC mesti 12 digit (tanpa simbol -).");
+    return;
+  }
 
-  document.getElementById("resultBox").innerHTML=`
-    <div class="field"><div class="label">Nama</div><div class="value">${data.nama}</div></div>
-    <div class="field"><div class="label">Jantina</div><div class="value">${data.jantina}</div></div>
-    <div class="field"><div class="label">Bangsa</div><div class="value">${data.bangsa}</div></div>
-    <div class="field"><div class="label">KDK</div><div class="value">${data.kdk}</div></div>
-    <div class="field"><div class="label">KDT</div><div class="value">${data.kdt}</div></div>
-    <div class="field"><div class="label">Kelas 2025</div><div class="value">${data.kelas_2025}</div></div>
-    <div class="field"><div class="label">Kelas 2026</div><div class="value">${data.kelas_2026}</div></div>
-    <div class="field"><div class="label">Guru Tingkatan 2026</div><div class="value">${data.guru_tingkatan_2026 || "-"}</div></div>
-  `;
-  show("result");
+  const url=`${apiUrl}?ting=${encodeURIComponent(tingkatan)}&mode=kelas&ic=${encodeURIComponent(ic)}`;
+
+  try{
+    const res=await fetch(url,{method:"GET"});
+    const data=await res.json();
+
+    if(!data || data.ok===false){
+      alert(data?.message || "Rekod tidak dijumpai.");
+      return;
+    }
+
+    document.getElementById("badgeResult").innerText = `Tingkatan ${tingkatan} • Keputusan`;
+
+    document.getElementById("resultBox").innerHTML=`
+      <div class="field"><div class="label">Nama</div><div class="value">${esc(data.nama)}</div></div>
+      <div class="field"><div class="label">Jantina</div><div class="value">${esc(data.jantina)}</div></div>
+      <div class="field"><div class="label">Bangsa</div><div class="value">${esc(data.bangsa)}</div></div>
+      <div class="field"><div class="label">KDK</div><div class="value">${esc(data.kdk)}</div></div>
+      <div class="field"><div class="label">KDT</div><div class="value">${esc(data.kdt)}</div></div>
+      <div class="field"><div class="label">Kelas 2025</div><div class="value">${esc(data.kelas_2025)}</div></div>
+      <div class="field"><div class="label">Kelas 2026</div><div class="value">${esc(data.kelas_2026)}</div></div>
+      <div class="field"><div class="label">Guru Tingkatan 2026</div><div class="value">${esc(data.guru_tingkatan_2026)}</div></div>
+    `;
+    show("result");
+
+  }catch(e){
+    console.error(e);
+    alert("Tak dapat connect ke server / Apps Script. Cuba lagi.");
+  }
 }
 </script>
 
