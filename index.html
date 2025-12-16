@@ -226,4 +226,21 @@ function showResult(data){
   html+=field("Jantina",getJantina(data));
   html+=field("Bangsa",getBangsa(data));
   html+=field("KDK",data.kdk);
-  html+=f
+  html+=field("KDT",data.kdt);
+  html+=field("Kelas 2025",data.kelas_2025);
+  html+=field("Kelas 2026",data.kelas_2026);
+  html+=field("Nama Guru Tingkatan 2026",data.guru_tingkatan_2026);
+
+  document.getElementById("resultBox").innerHTML=html;
+  show("result");
+}
+
+/* ================= SAFETY ================= */
+window.onerror = function(){
+  document.body.innerHTML =
+  "<div style='padding:40px;text-align:center;font-family:sans-serif'>" +
+  "<h2>Ralat Sistem</h2><p>Sila refresh halaman.</p></div>";
+};
+</script>
+</body>
+</html>
