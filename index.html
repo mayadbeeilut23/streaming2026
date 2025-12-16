@@ -21,7 +21,7 @@ const apiUrl = "https://script.google.com/macros/s/AKfycbw-Ptinh6OwlWtPhU7_BACIZ
 function semak() {
   const ic = document.getElementById("ic").value;
 
-  fetch(apiUrl + "?tingkatan=2&mode=kelas&ic=" + ic)
+  fetch(apiUrl + "?ting=2&mode=kelas&ic=" + ic)
     .then(r => r.json())
     .then(d => {
       document.getElementById("result").textContent = JSON.stringify(d, null, 2);
