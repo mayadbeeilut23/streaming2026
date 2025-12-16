@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <title>Sistem Semakan Kedudukan Kelas</title>
+</head>
+<body>
+
+<h2>Sistem Semakan Kedudukan Kelas</h2>
+
+<label>No IC:</label><br>
+<input type="text" id="ic"><br><br>
+
+<button onclick="semak()">Semak</button>
+
+<pre id="result"></pre>
+
+<script>
+const apiUrl = "https://script.google.com/macros/s/AKfycbw-Ptinh6OwlWtPhU7_BACIZi1AXKJ6ibOsVj_tHA80zHWMFH0b1CygYfhhABt2cbT4vQ/exec";
+
+function semak() {
+  const ic = document.getElementById("ic").value;
+
+  fetch(apiUrl + "?tingkatan=2&mode=kelas&ic=" + ic)
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById("result").textContent = JSON.stringify(d, null, 2);
+    })
+    .catch(e => {
+      document.getElementById("result").textContent = e;
+    });
+}
+</script>
+
+</body>
+</html>
