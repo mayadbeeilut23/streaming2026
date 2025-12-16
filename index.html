@@ -286,7 +286,11 @@
       </div>
 
       <div class="row">
-        <button class="pill secondary" onclick="go('home')">Kembali</button>
+        <button class="pill secondary" onclick="openPDFandGoHome()">
+  Muka Depan
+</button>
+
+
       </div>
     </section>
 
@@ -357,6 +361,28 @@
   </div>
 
   <script>
+
+   function openPDFandGoHome() {
+
+  let pdfUrl = "";
+
+  if (selectedTing === "2") {
+    pdfUrl = "panduan_kelas_t2.pdf";
+  } else if (selectedTing === "3") {
+    pdfUrl = "panduan_kelas_t3.pdf";
+  } else {
+    pdfUrl = "panduan_umum.pdf";
+  }
+
+  // buka PDF
+  window.open(pdfUrl, "_blank");
+
+  // balik ke muka depan
+  go("home");
+}
+
+}
+
     // ✅ URL Apps Script kau
     const apiUrl = "https://script.google.com/macros/s/AKfycbw-Ptinh6OwlWtPhU7_BACIZi1AXKJ6ibOsVj_tHA80zHWMFH0b1CygYfhhABt2cbT4vQ/exec";
 
