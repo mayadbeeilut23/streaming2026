@@ -34,11 +34,14 @@
 
     .container{ width:100%; max-width:520px; }
 
-    /* ✅ fallback: by default HOME is visible even if JS fails */
-    .screen{ display:none; }
-    #home{ display:block; }                 /* fallback */
+    /* ✅ normal behaviour: only .active shown */
+    .screen{ display:none; animation: fade .25s ease; }
     .screen.active{ display:block; }
-    .screen.active ~ #home{ display:none; } /* bila screen lain active, home akan hide */
+
+    @keyframes fade{
+      from{ opacity:0; transform: translateY(10px); }
+      to{ opacity:1; transform: translateY(0); }
+    }
 
     .header{ text-align:center; margin-bottom:22px; }
 
@@ -69,7 +72,11 @@
       background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       box-shadow: 0 8px 20px rgba(255,196,214,.35);
       color: var(--text);
+      transition: transform .15s ease, box-shadow .15s ease;
     }
+    .pill:hover{ transform: translateY(-2px); box-shadow: 0 12px 26px rgba(255,196,214,.45); }
+    .pill:active{ transform: translateY(0); }
+
     .pill.secondary{
       background: linear-gradient(135deg, #ededed 0%, #f8f8f8 100%);
       box-shadow: 0 8px 18px rgba(0,0,0,.08);
@@ -90,6 +97,7 @@
       outline:none;
       font-size:1rem;
     }
+    .input:focus{ border-color:#ff9bb5; }
 
     .row{ display:flex; gap:12px; margin-top:14px; }
     .row .pill{ flex:1; padding:14px 14px; font-size:.95rem; }
@@ -161,8 +169,8 @@
 <body>
   <div class="container">
 
-    <!-- HOME -->
-    <section id="home" class="screen">
+    <!-- HOME (✅ start as active) -->
+    <section id="home" class="screen active">
       <div class="header">
         <div class="logo">
           <img src="logopaloh.png" alt="Logo SMK Paloh">
@@ -243,36 +251,26 @@
   </div>
 
 <script>
-/* ========= CONFIG ========= */
 const apiUrl = "https://script.google.com/macros/s/AKfycbw-Ptinh6OwlWtPhU7_BACIZi1AXKJ6ibOsVj_tHA80zHWMFH0b1CygYfhhABt2cbT4vQ/exec";
 const SENARAI_BUKU_URL = "senarai_pembelian_buku.pdf";
-
-/* ========= STATE ========= */
 let selectedTing = null;
 
-/* ========= BOOT ========= */
 (function boot(){
-  // enable home screen (fallback friendly)
-  document.getElementById("home").classList.add("active");
   const jsStatus = document.getElementById("jsStatus");
   if(jsStatus) jsStatus.textContent = "JS status: loaded ✅";
 })();
 
-/* ========= NAV ========= */
 function go(id){
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  const el = document.getElementById(id);
-  if(el) el.classList.add("active");
+  document.getElementById(id).classList.add("active");
 }
 
 function goHome(){
   selectedTing = null;
-  const ic = document.getElementById("ic");
-  if(ic) ic.value = "";
+  document.getElementById("ic").value = "";
   go("home");
 }
 
-/* ========= HOME BUTTONS ========= */
 function startSemak(ting){
   selectedTing = String(ting);
   document.getElementById("badgeTing").textContent = "Tingkatan " + selectedTing;
@@ -285,7 +283,6 @@ function openSenaraiBuku(){
   window.open(SENARAI_BUKU_URL, "_blank");
 }
 
-/* ========= HELPERS ========= */
 function cleanIC(raw){
   return (raw || "").replace(/[^0-9]/g, "").trim();
 }
@@ -301,7 +298,6 @@ function escapeHtml(str){
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-
 function field(label, value){
   const v = (value === undefined || value === null || value === "") ? "-" : value;
   return `
@@ -312,14 +308,12 @@ function field(label, value){
   `;
 }
 
-/* ========= ERROR ========= */
 function showError(message, debug=""){
   document.getElementById("errorMsg").textContent = message || "Ada masalah.";
   document.getElementById("errorDebug").textContent = debug ? ("Debug: " + debug) : "";
   go("error");
 }
 
-/* ========= SUBMIT ========= */
 async function submitCheck(){
   try{
     const icEl = document.getElementById("ic");
@@ -346,10 +340,9 @@ async function submitCheck(){
     const url = apiUrl + "?" + qs.toString();
 
     const res = await fetch(url, { method:"GET" });
-
-    // ✅ jika bukan JSON, kita baca text dulu untuk debug
     const text = await res.text();
-    let data = null;
+
+    let data;
     try{
       data = JSON.parse(text);
     }catch(e){
@@ -362,11 +355,9 @@ async function submitCheck(){
       return;
     }
 
-    // ✅ render result
     const box = document.getElementById("resultBox");
     document.getElementById("badgeResult").textContent = "Tingkatan " + selectedTing + " • Keputusan";
     document.getElementById("resultSub").textContent = "Berjaya! Maklumat dijumpai.";
-
     box.innerHTML =
       field("Nama Pelajar", data.nama) +
       field("Jantina", data.jantina) +
