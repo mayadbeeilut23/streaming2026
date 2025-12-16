@@ -6,29 +6,86 @@
 <title>Sistem Semakan Kedudukan Kelas</title>
 
 <style>
+:root{
+  --primary:#ffc4d6;
+  --secondary:#ffe4d4;
+  --bg1:#fff7cc;
+  --bg2:#fff1b8;
+}
+
+*{box-sizing:border-box}
+
 body{
   margin:0;
-  font-family:Segoe UI,Tahoma,Verdana,sans-serif;
-  background:#fff7cc;
+  font-family:"Segoe UI",Tahoma,Verdana,sans-serif;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2));
   min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:24px;
+}
+
+.container{width:100%;max-width:520px}
+
+.screen{display:none}
+.screen.active{display:block}
+
+.header{text-align:center;margin-bottom:20px}
+
+.logo{
+  width:120px;height:120px;
+  margin:0 auto 16px;
+  background:#fff;
+  border-radius:22px;
   display:flex;
   align-items:center;
   justify-content:center;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
 }
-.container{max-width:520px;width:100%;padding:24px}
-.screen{display:none}
-.screen.active{display:block}
-button{
-  width:100%;padding:16px;border:none;border-radius:999px;
-  font-weight:800;margin-bottom:12px;cursor:pointer;
-  background:#ffc4d6;
+
+.logo img{
+  width:90px;
+  height:auto;
 }
-.secondary{background:#eee}
+
+.btn{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:999px;
+  font-weight:800;
+  text-transform:uppercase;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  margin-bottom:12px;
+  cursor:pointer;
+}
+.btn.secondary{background:#eee}
+
 .card{
-  background:#fff;padding:20px;border-radius:20px;
+  background:#fff;
+  padding:20px;
+  border-radius:22px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
 }
+
+input{
+  width:100%;
+  padding:14px;
+  border-radius:999px;
+  border:2px solid var(--primary);
+}
+
+.result-card{
+  background:#fff;
+  padding:18px;
+  border-radius:22px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
 .field{border-bottom:1px solid #eee;padding:10px 0}
-.label{font-size:.75rem;color:#777;font-weight:800}
+.field:last-child{border-bottom:none}
+.label{font-size:.75rem;font-weight:900;color:#888}
 .value{font-size:1.05rem;font-weight:800}
 </style>
 </head>
@@ -36,68 +93,67 @@ button{
 <body>
 <div class="container">
 
+<!-- HOME -->
 <section id="home" class="screen active">
-  <h1>Sistem Semakan Kedudukan Kelas</h1>
-  <button onclick="start(2)">Tingkatan 2</button>
-  <button onclick="start(3)">Tingkatan 3</button>
+  <div class="header">
+    <div class="logo">
+      <!-- 🔥 PATH LOGO FIX -->
+      <img src="assets/logopaloh.png" alt="Logo SMK Paloh">
+    </div>
+    <h1>Sistem Semakan Kedudukan Kelas</h1>
+    <p>Pilih Tingkatan → Masuk No IC → Papar Keputusan</p>
+  </div>
+
+  <button class="btn" onclick="startSemak(2)">Tingkatan 2</button>
+  <button class="btn" onclick="startSemak(3)">Tingkatan 3</button>
 </section>
 
+<!-- INPUT -->
 <section id="input" class="screen">
-  <h2 id="title"></h2>
+  <h2 id="badgeTing"></h2>
   <div class="card">
-    <input id="ic" placeholder="No IC 12 digit" style="width:100%;padding:12px">
-    <button onclick="submit()">Semak</button>
-    <button class="secondary" onclick="home()">Kembali</button>
+    <input id="ic" placeholder="No IC 12 digit">
+    <button class="btn" onclick="submitCheck()">Semak</button>
+    <button class="btn secondary" onclick="goHome()">Kembali</button>
   </div>
 </section>
 
+<!-- RESULT -->
 <section id="result" class="screen">
   <h2>Keputusan</h2>
-  <div id="box" class="card"></div>
-  <button class="secondary" onclick="home()">Main Page</button>
-</section>
-
-<section id="error" class="screen">
-  <div id="err" class="card"></div>
-  <button class="secondary" onclick="home()">Main Page</button>
+  <div id="resultBox" class="result-card"></div>
+  <button class="btn secondary" onclick="goHome()">Main Page</button>
 </section>
 
 </div>
 
 <script>
-const API="PASTE_URL_WEB_APP_DI_SINI";
+const API="PASTE_APPS_SCRIPT_URL_DI_SINI";
 let ting=null;
 
 function show(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
-function home(){show("home")}
-function start(t){
+function startSemak(t){
   ting=t;
-  document.getElementById("title").innerText="Tingkatan "+t;
+  document.getElementById("badgeTing").innerText="Tingkatan "+t;
   show("input");
 }
-function submit(){
+function goHome(){show("home")}
+function submitCheck(){
   const ic=document.getElementById("ic").value.replace(/\D/g,"");
   if(ic.length!==12){alert("IC mesti 12 digit");return;}
   fetch(`${API}?ting=${ting}&ic=${ic}`)
     .then(r=>r.json())
     .then(d=>{
-      if(!d.ok) throw "No data";
       let h="";
       h+=row("Nama",d.nama);
       h+=row("Jantina",d.jantina);
       h+=row("Bangsa",d.bangsa);
-      h+=row("KDK",d.kdk);
-      h+=row("KDT",d.kdt);
-      h+=row("Kelas 2025",d.kelas_2025);
-      h+=row("Kelas 2026",d.kelas_2026);
-      h+=row("Guru Tingkatan 2026",d.guru_tingkatan_2026);
-      document.getElementById("box").innerHTML=h;
+      document.getElementById("resultBox").innerHTML=h;
       show("result");
-    })
-    .catch(()=>{document.getElementById("err").innerText="Rekod tidak dijumpai";show("error")});
+    });
 }
 function row(l,v){
   return `<div class="field"><div class="label">${l}</div><div class="value">${v||"-"}</div></div>`;
