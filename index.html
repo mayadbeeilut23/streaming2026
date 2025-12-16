@@ -1,239 +1,117 @@
-<!doctype html>
-<html lang="ms">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sistem Semakan Kedudukan Kelas</title>
-
-  <style>
-    :root{
-      --primary:#ffc4d6;
-      --secondary:#ffe4d4;
-      --bg1:#fff7cc;
-      --bg2:#fff1b8;
-      --text:#2d2d2d;
-      --muted:#666;
-      --card:#ffffff;
-      --border:#f0f0f0;
-      --dangerBg:#ffe5e5;
-      --dangerText:#b30000;
-    }
-
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 100%);
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-      color:var(--text);
-    }
-
-    .container{ width:100%; max-width:520px; }
-    .screen{ display:none; animation: fade .25s ease; }
-    .screen.active{ display:block; }
-
-    @keyframes fade{
-      from{ opacity:0; transform: translateY(10px); }
-      to{ opacity:1; transform: translateY(0); }
-    }
-
-    .header{ text-align:center; margin-bottom:22px; }
-
-    .logo-wrap{
-      width:120px;
-      height:120px;
-      margin:0 auto 16px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .logo-img{
-      width:110px;
-      height:110px;
-      object-fit:contain;
-      background:#fff;
-      padding:12px;
-      border-radius:20px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.08);
-    }
-
-    .title{ margin:0; font-size:1.6rem; font-weight:800; }
-    .subtitle{ margin:8px 0 0; color:var(--muted); font-size:.95rem; }
-
-    .pill{
-      width:100%;
-      border:none;
-      border-radius:999px;
-      padding:16px 18px;
-      font-weight:800;
-      text-transform:uppercase;
-      cursor:pointer;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      box-shadow: 0 8px 20px rgba(255,196,214,.35);
-    }
-    .pill.secondary{
-      background:#eee;
-      box-shadow: 0 8px 18px rgba(0,0,0,.08);
-    }
-
-    .grid{ display:flex; flex-direction:column; gap:12px; }
-
-    .card{
-      background:#fff;
-      border-radius:22px;
-      padding:18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.08);
-    }
-
-    .input{
-      width:100%;
-      padding:14px;
-      border-radius:999px;
-      border:2px solid var(--primary);
-      font-size:1rem;
-    }
-
-    .row{ display:flex; gap:12px; margin-top:14px; }
-    .row .pill{ flex:1; }
-
-    .loading{ text-align:center; padding:30px 0; }
-
-    .result-card{
-      background:#fff;
-      border-radius:22px;
-      padding:18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.08);
-    }
-
-    .field{ padding:12px 0; border-bottom:1px solid var(--border); }
-    .field:last-child{ border-bottom:none; }
-
-    .label{
-      font-size:.75rem;
-      font-weight:900;
-      color:#888;
-      text-transform:uppercase;
-    }
-    .value{ font-size:1.05rem; font-weight:800; }
-
-    .error{
-      background:var(--dangerBg);
-      padding:18px;
-      border-radius:22px;
-      text-align:center;
-      color:var(--dangerText);
-      font-weight:900;
-    }
-  </style>
-</head>
-
-<body>
-<div class="container">
-
-<!-- HOME -->
-<section id="home" class="screen active">
-  <div class="header">
-    <div class="logo-wrap">
-      <img src="logopaloh.png" class="logo-img">
-    </div>
-    <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
-    <p class="subtitle">Pilih Tingkatan → Masuk No IC → Papar Keputusan</p>
-  </div>
-
-  <div class="grid">
-    <button class="pill" onclick="startSemak(2)">Tingkatan 2</button>
-    <button class="pill" onclick="startSemak(3)">Tingkatan 3</button>
-    <button class="pill secondary" onclick="openSenaraiBuku()">Senarai Pembelian Buku</button>
-  </div>
-</section>
-
-<!-- INPUT -->
-<section id="input" class="screen">
-  <div class="header">
-    <h2 id="badgeTing">Tingkatan</h2>
-  </div>
-
-  <div class="card">
-    <input id="ic" class="input" placeholder="No IC 12 digit">
-    <div class="row">
-      <button class="pill" onclick="submitCheck()">Semak</button>
-      <button class="pill secondary" onclick="goHome()">Kembali</button>
-    </div>
-  </div>
-</section>
-
-<!-- LOADING -->
-<section id="loading" class="screen">
-  <div class="loading">Menyemak maklumat...</div>
-</section>
-
-<!-- RESULT -->
-<section id="result" class="screen">
-  <div class="header">
-    <h2>Keputusan</h2>
-  </div>
-
-  <div id="resultBox" class="result-card"></div>
-
-  <div class="row">
-    <button class="pill secondary" onclick="goHome()">Kembali (Main Page)</button>
-  </div>
-</section>
-
-<!-- ERROR -->
-<section id="error" class="screen">
-  <div class="error" id="errorMsg"></div>
-  <div class="row">
-    <button class="pill secondary" onclick="goHome()">Kembali (Main Page)</button>
-  </div>
-</section>
-
-</div>
-
 <script>
 const apiUrl =
 "https://script.google.com/macros/s/AKfycbw-Ptinh6OwlWtPhU7_BACIZi1AXKJ6ibOsVj_tHA80zHWMFH0b1CygYfhhABt2cbT4vQ/exec";
 const SENARAI_BUKU_URL = "senarai_pembelian_buku.pdf";
 
-let selectedTing=null;
+let selectedTing = null;
 
+/* ======================
+   NAVIGATION
+====================== */
 function go(id){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".screen").forEach(s =>
+    s.classList.remove("active")
+  );
   document.getElementById(id).classList.add("active");
 }
 
 function goHome(){
-  selectedTing=null;
-  document.getElementById("ic").value="";
+  selectedTing = null;
+  const ic = document.getElementById("ic");
+  if(ic) ic.value = "";
   go("home");
 }
 
 function startSemak(t){
-  selectedTing=t;
-  document.getElementById("badgeTing").innerText="Tingkatan "+t;
+  selectedTing = t;
+  document.getElementById("badgeTing").innerText = "Tingkatan " + t;
   go("input");
 }
 
 function openSenaraiBuku(){
-  window.open(SENARAI_BUKU_URL,"_blank");
+  window.open(SENARAI_BUKU_URL, "_blank");
 }
 
-function cleanIC(v){ return v.replace(/\D/g,""); }
+/* ======================
+   UTIL
+====================== */
+function cleanIC(v){
+  return (v || "").replace(/\D/g,"");
+}
 
+function showError(msg){
+  document.getElementById("errorMsg").innerText = msg;
+  go("error");
+}
+
+function field(label,value){
+  return `
+    <div class="field">
+      <div class="label">${label}</div>
+      <div class="value">${value || "-"}</div>
+    </div>
+  `;
+}
+
+/* ======================
+   FIX JANTINA & BANGSA
+====================== */
+function getJantina(d){
+  return d.jantina || d.JANTINA || d.Gender || "-";
+}
+function getBangsa(d){
+  return d.bangsa || d.BANGSA || d.Ras || "-";
+}
+
+/* ======================
+   SUBMIT
+====================== */
 async function submitCheck(){
-  const ic=cleanIC(document.getElementById("ic").value);
-  if(ic.length!==12){ showError("No IC mesti 12 digit."); return; }
+  const ic = cleanIC(document.getElementById("ic").value);
+
+  if(ic.length !== 12){
+    showError("No IC mesti 12 digit.");
+    return;
+  }
 
   go("loading");
 
   try{
-    const url=apiUrl+"?ting="+selectedTing+"&mode=kelas&ic="+ic;
-    const res=await fetch(url);
-    const data=await res.json();
+    const url = apiUrl +
+      "?ting=" + selectedTing +
+      "&mode=kelas" +
+      "&ic=" + ic;
 
-    if(data.ok===false){ showErr
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if(data.ok === false){
+      showError("Rekod tidak dijumpai.");
+      return;
+    }
+
+    showResult(data);
+
+  }catch(err){
+    showError("Ralat sambungan sistem.");
+  }
+}
+
+/* ======================
+   RESULT
+====================== */
+function showResult(data){
+  let html = "";
+  html += field("Nama Pelajar", data.nama);
+  html += field("Jantina", getJantina(data));
+  html += field("Bangsa", getBangsa(data));
+  html += field("KDK", data.kdk);
+  html += field("KDT", data.kdt);
+  html += field("Kelas 2025", data.kelas_2025);
+  html += field("Kelas 2026", data.kelas_2026);
+  html += field("Nama Guru Tingkatan 2026", data.guru_tingkatan_2026);
+
+  document.getElementById("resultBox").innerHTML = html;
+  go("result");
+}
+</script>
