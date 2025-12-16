@@ -1,448 +1,131 @@
 <!doctype html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sistem Semakan Kedudukan Kelas</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistem Semakan Kedudukan Kelas</title>
 
-  <style>
-    :root{
-      --primary:#ffc4d6;
-      --secondary:#ffe4d4;
-      --bg1:#fff7cc;
-      --bg2:#fff1b8;
-      --text:#2d2d2d;
-      --muted:#666;
-      --card:#ffffff;
-      --border:#f0f0f0;
-      --dangerBg:#ffe5e5;
-      --dangerText:#b30000;
-    }
-
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 100%);
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-      color:var(--text);
-    }
-
-    .container{ width:100%; max-width:520px; }
-
-    .screen{ display:none; animation: fade .25s ease; }
-    .screen.active{ display:block; }
-
-    @keyframes fade{
-      from{ opacity:0; transform: translateY(10px); }
-      to{ opacity:1; transform: translateY(0); }
-    }
-
-    .header{ text-align:center; margin-bottom:22px; }
-
-    .logo-wrap{
-      width:120px;
-      height:120px;
-      margin:0 auto 16px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .logo-img{
-      width:110px;
-      height:110px;
-      object-fit:contain;
-      background:#fff;
-      padding:12px;
-      border-radius:20px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.08);
-      display:block;
-    }
-
-    .title{ margin:0; font-size:1.6rem; line-height:1.2; font-weight:800; }
-    .subtitle{ margin:8px 0 0; color:var(--muted); font-size:.95rem; }
-
-    .section-title{
-      text-align:center;
-      font-size:1.25rem;
-      font-weight:800;
-      margin:0 0 16px;
-    }
-
-    .pill{
-      width:100%;
-      border:none;
-      border-radius:999px;
-      padding:16px 18px;
-      font-weight:800;
-      letter-spacing:.4px;
-      text-transform:uppercase;
-      cursor:pointer;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      box-shadow: 0 8px 20px rgba(255,196,214,.35);
-      transition: transform .15s ease, box-shadow .15s ease;
-      color: var(--text);
-    }
-    .pill:hover{ transform: translateY(-2px); box-shadow: 0 12px 26px rgba(255,196,214,.45); }
-    .pill:active{ transform: translateY(0); }
-
-    .pill.secondary{
-      background: linear-gradient(135deg, #ededed 0%, #f8f8f8 100%);
-      box-shadow: 0 8px 18px rgba(0,0,0,.08);
-    }
-
-    .grid{ display:flex; flex-direction:column; gap:12px; }
-
-    .note{ text-align:center; margin-top:10px; font-size:.9rem; color: var(--muted); }
-
-    .card{
-      background: var(--card);
-      border-radius:22px;
-      padding:18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.08);
-    }
-
-    .input-label{ display:block; font-weight:800; margin-bottom:8px; }
-    .input{
-      width:100%;
-      padding:14px 16px;
-      border-radius:999px;
-      border: 2px solid var(--primary);
-      outline:none;
-      font-size:1rem;
-    }
-    .input:focus{ border-color:#ff9bb5; }
-
-    .hint{ margin:8px 0 0; font-size:.85rem; color:#888; font-style:italic; }
-
-    .row{ display:flex; gap:12px; margin-top:14px; }
-    .row .pill{ flex:1; padding:14px 14px; font-size:.95rem; }
-
-    .loading{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      padding:30px 0;
-      gap:12px;
-      text-align:center;
-    }
-
-    .spinner{
-      width:52px;
-      height:52px;
-      border-radius:50%;
-      border: 4px solid var(--primary);
-      border-top: 4px solid #ff9bb5;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin{ to{ transform: rotate(360deg);} }
-
-    .result-card{
-      background:#fff;
-      border-radius:22px;
-      padding:18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.08);
-      margin-top:10px;
-    }
-
-    .field{ padding:12px 0; border-bottom: 1px solid var(--border); }
-    .field:last-child{ border-bottom:none; }
-
-    .label{
-      font-size:.78rem;
-      font-weight:900;
-      letter-spacing:.5px;
-      color:#888;
-      text-transform:uppercase;
-      margin-bottom:4px;
-    }
-    .value{ font-size:1.05rem; font-weight:800; color:var(--text); word-break:break-word; }
-
-    .badge{
-      display:inline-block;
-      padding:8px 12px;
-      border-radius:999px;
-      font-weight:900;
-      font-size:.8rem;
-      background: rgba(255,196,214,.35);
-      margin: 0 auto 10px;
-    }
-
-    .error{
-      background: var(--dangerBg);
-      border: 2px solid rgba(179,0,0,.15);
-      border-radius:22px;
-      padding:18px;
-      text-align:center;
-      color: var(--dangerText);
-      font-weight:900;
-    }
-
-    .tiny{ margin-top:10px; font-size:.82rem; color:#777; text-align:center; }
-    code{ background: rgba(0,0,0,.04); padding:2px 6px; border-radius:8px; }
-  </style>
+<style>
+:root{
+  --primary:#ffc4d6;
+  --secondary:#ffe4d4;
+  --bg1:#fff7cc;
+  --bg2:#fff1b8;
+  --text:#2d2d2d;
+  --card:#ffffff;
+}
+body{
+  margin:0;
+  font-family:Segoe UI, sans-serif;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.container{max-width:520px;width:100%}
+.screen{display:none}
+.screen.active{display:block}
+.logo{background:#fff;width:120px;height:120px;margin:0 auto 16px;
+  border-radius:22px;display:flex;align-items:center;justify-content:center}
+.logo img{width:90px}
+.title{text-align:center;font-weight:800}
+.subtitle{text-align:center;color:#666}
+.pill{
+  width:100%;border:none;border-radius:999px;
+  padding:16px;font-weight:800;cursor:pointer;
+  background:linear-gradient(135deg,var(--primary),var(--secondary))
+}
+.pill.secondary{background:#eee}
+.grid{display:flex;flex-direction:column;gap:12px}
+.card{background:#fff;border-radius:22px;padding:18px;margin-top:10px}
+.input{width:100%;padding:14px;border-radius:999px;border:2px solid var(--primary)}
+.row{display:flex;gap:12px;margin-top:14px}
+.row .pill{flex:1}
+.field{padding:10px 0;border-bottom:1px solid #eee}
+.field:last-child{border-bottom:none}
+.label{font-size:.75rem;font-weight:900;color:#888}
+.value{font-size:1.05rem;font-weight:800}
+</style>
 </head>
 
 <body>
-  <div class="container">
+<div class="container">
 
-    <!-- HOME -->
-    <section id="home" class="screen active">
-      <div class="header">
-        <div class="logo-wrap">
-          <img src="logopaloh.png" alt="Logo SMK Paloh" class="logo-img">
-        </div>
-
-        <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
-        <p class="subtitle">Pilih Tingkatan → Masuk No IC → Semak → Papar Result</p>
-      </div>
-
-      <div class="grid">
-        <button class="pill" onclick="startSemak(2)">Tingkatan 2</button>
-        <button class="pill" onclick="startSemak(3)">Tingkatan 3</button>
-        <button class="pill secondary" onclick="openSenaraiBuku()">Senarai Pembelian Buku</button>
-      </div>
-
-      <p class="note">Tip: No IC tanpa simbol <code>-</code></p>
-    </section>
-
-    <!-- INPUT IC -->
-    <section id="input" class="screen">
-      <div class="header">
-        <div class="badge" id="badgeTing">Tingkatan -</div>
-        <h2 class="section-title">Masukkan No IC</h2>
-        <p class="subtitle">Contoh: 051234567890</p>
-      </div>
-
-      <div class="card">
-        <label class="input-label" for="ic">Nombor Kad Pengenalan</label>
-        <input class="input" id="ic" type="text" inputmode="numeric" maxlength="14" placeholder="12 digit sahaja" />
-        <div class="hint">Tanpa simbol <b>-</b>. Pastikan 12 digit.</div>
-
-        <div class="row">
-          <button class="pill" onclick="submitCheck()">Semak</button>
-          <button class="pill secondary" onclick="goHome()">Kembali</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- LOADING -->
-    <section id="loading" class="screen">
-      <div class="loading">
-        <div class="spinner"></div>
-        <div style="font-weight:900;">Menyemak maklumat...</div>
-        <div class="tiny">Sekejap ya 😄</div>
-      </div>
-    </section>
-
-    <!-- RESULT -->
-    <section id="result" class="screen">
-      <div class="header">
-        <div class="badge" id="badgeResult">Keputusan</div>
-        <h2 class="section-title">Papar Maklumat</h2>
-        <p class="subtitle" id="resultSub">Maklumat dijumpai seperti di bawah</p>
-      </div>
-
-      <div id="resultBox" class="result-card"></div>
-
-      <div class="row">
-        <button class="pill secondary" onclick="goHome()">Kembali (Main Page)</button>
-      </div>
-
-      <div class="tiny" id="debugLine"></div>
-    </section>
-
-    <!-- ERROR -->
-    <section id="error" class="screen">
-      <div class="header">
-        <h2 class="section-title">Ops 😅</h2>
-        <p class="subtitle">Rekod tidak dijumpai / No IC tidak sah</p>
-      </div>
-
-      <div class="error" id="errorMsg">Rekod tidak dijumpai.</div>
-
-      <div class="row">
-        <button class="pill secondary" onclick="goHome()">Kembali (Main Page)</button>
-      </div>
-
-      <div class="tiny" id="errorDebug"></div>
-    </section>
-
+<!-- HOME -->
+<section id="home" class="screen active">
+  <div class="logo"><img src="logopaloh.png" alt="Logo SMK Paloh"></div>
+  <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
+  <p class="subtitle">Pilih Tingkatan → Masuk No IC → Papar Keputusan</p>
+  <div class="grid">
+    <button class="pill" onclick="start(2)">Tingkatan 2</button>
+    <button class="pill" onclick="start(3)">Tingkatan 3</button>
   </div>
+</section>
 
-  <script>
-    // ✅ URL Apps Script (kekalkan yang betul)
-    const apiUrl = "https://script.google.com/macros/s/AKfycbw-Ptinh6OwlWtPhU7_BACIZi1AXKJ6ibOsVj_tHA80zHWMFH0b1CygYfhhABt2cbT4vQ/exec";
+<!-- INPUT -->
+<section id="input" class="screen">
+  <h2 class="title" id="tingLabel"></h2>
+  <div class="card">
+    <input id="ic" class="input" placeholder="No IC 12 digit">
+    <div class="row">
+      <button class="pill" onclick="semak()">Semak</button>
+      <button class="pill secondary" onclick="goHome()">Kembali</button>
+    </div>
+  </div>
+</section>
 
-    // ✅ PDF senarai pembelian buku
-    const SENARAI_BUKU_URL = "senarai_pembelian_buku.pdf";
+<!-- RESULT -->
+<section id="result" class="screen">
+  <h2 class="title">Keputusan</h2>
+  <div id="resultBox" class="card"></div>
+  <div class="row">
+    <button class="pill secondary" onclick="goHome()">Kembali (Main Page)</button>
+  </div>
+</section>
 
-    let selectedTing = null;
+</div>
 
-    function go(id){
-      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-      document.getElementById(id).classList.add("active");
-    }
+<script>
+const apiUrl="https://script.google.com/macros/s/AKfycbxJzukkZf4P8Y8cA3WrSVp6ISkvXhMgsqzjVElhfW4_SBPafEt0_lsnkCM17_NF1SsO/exec";
+let tingkatan=null;
 
-    function goHome(){
-      selectedTing = null;
-      document.getElementById("ic").value = "";
-      go("home");
-    }
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+function goHome(){show("home")}
+function start(t){
+  tingkatan=t;
+  document.getElementById("tingLabel").innerText="Tingkatan "+t;
+  document.getElementById("ic").value="";
+  show("input");
+}
+function cleanIC(v){return v.replace(/\D/g,"")}
 
-    function startSemak(ting){
-      selectedTing = String(ting);
-      document.getElementById("badgeTing").textContent = "Tingkatan " + selectedTing;
-      document.getElementById("ic").value = "";
-      go("input");
-      setTimeout(() => document.getElementById("ic").focus(), 120);
-    }
+async function semak(){
+  const ic=cleanIC(document.getElementById("ic").value);
+  if(ic.length!==12){alert("No IC mesti 12 digit");return;}
 
-    function openSenaraiBuku(){
-      window.open(SENARAI_BUKU_URL, "_blank");
-    }
+  const url=`${apiUrl}?ting=${tingkatan}&mode=kelas&ic=${ic}`;
+  const res=await fetch(url);
+  const data=await res.json();
 
-    function cleanIC(raw){
-      return (raw || "").replace(/[^0-9]/g, "").trim();
-    }
+  if(!data.ok){alert(data.message);return;}
 
-    function validIC(ic){
-      return ic.length === 12;
-    }
+  document.getElementById("resultBox").innerHTML=`
+    <div class="field"><div class="label">Nama</div><div class="value">${data.nama}</div></div>
+    <div class="field"><div class="label">Jantina</div><div class="value">${data.jantina}</div></div>
+    <div class="field"><div class="label">Bangsa</div><div class="value">${data.bangsa}</div></div>
+    <div class="field"><div class="label">KDK</div><div class="value">${data.kdk}</div></div>
+    <div class="field"><div class="label">KDT</div><div class="value">${data.kdt}</div></div>
+    <div class="field"><div class="label">Kelas 2025</div><div class="value">${data.kelas_2025}</div></div>
+    <div class="field"><div class="label">Kelas 2026</div><div class="value">${data.kelas_2026}</div></div>
+    <div class="field"><div class="label">Guru Tingkatan 2026</div><div class="value">${data.guru_tingkatan_2026 || "-"}</div></div>
+  `;
+  show("result");
+}
+</script>
 
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function field(label, value){
-      const v = (value === undefined || value === null || String(value).trim() === "") ? "-" : value;
-      return `
-        <div class="field">
-          <div class="label">${escapeHtml(label)}</div>
-          <div class="value">${escapeHtml(v)}</div>
-        </div>
-      `;
-    }
-
-    function showError(message, debug=""){
-      document.getElementById("errorMsg").textContent = message || "Ada masalah.";
-      document.getElementById("errorDebug").textContent = debug ? ("Debug: " + debug) : "";
-      go("error");
-    }
-
-    /* ✅ ambil nilai walau key jadi uppercase / ada space / underscore / trailing space */
-    function pick(obj, keys){
-      if(!obj) return "";
-      // direct match
-      for(const k of keys){
-        if(Object.prototype.hasOwnProperty.call(obj, k)){
-          const v = obj[k];
-          if(v !== null && v !== undefined && String(v).trim() !== "") return v;
-        }
-      }
-      // case-insensitive + trim
-      const map = {};
-      Object.keys(obj).forEach(k => {
-        map[String(k).trim().toLowerCase()] = obj[k];
-      });
-      for(const k of keys){
-        const v = map[String(k).trim().toLowerCase()];
-        if(v !== null && v !== undefined && String(v).trim() !== "") return v;
-      }
-      return "";
-    }
-
-    /* ✅ fallback jantina dari IC (digit terakhir: ganjil=L, genap=P) */
-    function genderFromIC(ic){
-      if(!ic || ic.length < 12) return "";
-      const last = parseInt(ic[ic.length-1], 10);
-      if(Number.isNaN(last)) return "";
-      return (last % 2 === 1) ? "L" : "P";
-    }
-
-    async function submitCheck(){
-      const ic = cleanIC(document.getElementById("ic").value);
-      document.getElementById("ic").value = ic;
-
-      if(!selectedTing){
-        showError("Sila pilih Tingkatan dahulu.");
-        return;
-      }
-      if(!ic){
-        showError("Sila masukkan No IC.");
-        return;
-      }
-      if(!validIC(ic)){
-        showError("No IC mesti 12 digit (tanpa simbol -).");
-        return;
-      }
-
-      go("loading");
-
-      try{
-        const qs = new URLSearchParams({ ting: selectedTing, mode: "kelas", ic });
-        const url = apiUrl + "?" + qs.toString();
-
-        const res = await fetch(url, { method: "GET" });
-        const text = await res.text();
-
-        let data;
-        try{ data = JSON.parse(text); }
-        catch(e){
-          showError("Server balas bukan JSON (Apps Script issue).", "Response: " + text.slice(0,200));
-          return;
-        }
-
-        if(!data || data.ok === false){
-          showError(data?.message || "Rekod tidak dijumpai. Semak No IC.", "API: " + url);
-          return;
-        }
-
-        // ✅ FIX: ambil ikut header sebenar sheet (uppercase pun jalan)
-        const nama   = pick(data, ["nama","NAMA","Nama"]);
-        const bangsa = pick(data, ["bangsa","BANGSA","Bangsa","ras","RAS"]);
-        const jRaw   = pick(data, ["jantina","JANTINA","Jantina","gender","GENDER"]);
-        const jantina = (jRaw && String(jRaw).trim() !== "") ? jRaw : genderFromIC(ic);
-
-        const kdk    = pick(data, ["kdk","KDK"]);
-        const kdt    = pick(data, ["kdt","KDT"]);
-        const k2025  = pick(data, ["kelas_2025","KELAS_2025","KELAS 2025","kelas2025"]);
-        const k2026  = pick(data, ["kelas_2026","KELAS_2026","KELAS 2026","kelas2026"]);
-        const guru   = pick(data, ["guru_tingkatan_2026","GURU_TINGKATAN_2026","GURU TINGKATAN 2026"]);
-
-        // ✅ render
-        document.getElementById("badgeResult").textContent = "Tingkatan " + selectedTing + " • Keputusan";
-        document.getElementById("resultSub").textContent = (nama ? "Berjaya! Maklumat dijumpai." : "Maklumat dipaparkan di bawah.");
-
-        const box = document.getElementById("resultBox");
-        box.innerHTML =
-          field("Nama Pelajar", nama) +
-          field("Jantina", jantina) +
-          field("Bangsa", bangsa) +
-          field("KDK", kdk) +
-          field("KDT", kdt) +
-          field("Kelas 2025", k2025) +
-          field("Kelas 2026", k2026) +
-          field("Nama Guru Tingkatan 2026", guru);
-
-        document.getElementById("debugLine").textContent = "API: " + url;
-        go("result");
-
-      }catch(err){
-        showError("Tak dapat connect ke server. Cuba lagi ya. (Network/permission)", String(err));
-      }
-    }
-  </script>
 </body>
 </html>
