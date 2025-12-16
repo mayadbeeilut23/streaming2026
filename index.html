@@ -12,8 +12,14 @@
   --bg1:#fff7cc;
   --bg2:#fff1b8;
   --text:#2d2d2d;
+  --muted:#666;
   --card:#ffffff;
+  --border:#eee;
+  --dangerBg:#ffe5e5;
+  --dangerText:#b30000;
 }
+
+*{box-sizing:border-box}
 body{
   margin:0;
   font-family:Segoe UI, sans-serif;
@@ -27,6 +33,9 @@ body{
 }
 .container{max-width:520px;width:100%}
 
+.screen{display:none}
+.screen.active{display:block}
+
 .header{ text-align:center; margin-bottom:18px; }
 
 .badge{
@@ -39,12 +48,40 @@ body{
   margin: 0 auto 10px;
 }
 
+.logo{
+  background:#fff;width:120px;height:120px;margin:0 auto 16px;
+  border-radius:22px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+.logo img{width:90px;height:auto;display:block}
+
+.title{text-align:center;font-weight:800;margin:0}
+.subtitle{text-align:center;color:var(--muted);margin:8px 0 0}
+
+.grid{display:flex;flex-direction:column;gap:12px; margin-top:18px;}
+
+.pill{
+  width:100%;
+  border:none;
+  border-radius:999px;
+  padding:16px 18px;
+  font-weight:800;
+  cursor:pointer;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:var(--text);
+  box-shadow: 0 8px 20px rgba(255,196,214,.35);
+}
+.pill.secondary{
+  background:#eee;
+  box-shadow: 0 8px 18px rgba(0,0,0,.08);
+}
+
 .input-wrap{
   background:#fff;
   border-radius:22px;
   padding:18px;
   box-shadow:0 10px 30px rgba(0,0,0,.08);
-  overflow:hidden; /* fix pill overflow */
+  overflow:hidden;
 }
 
 .input{
@@ -54,46 +91,52 @@ body{
   border:2px solid var(--primary);
   font-size:1rem;
   outline:none;
-  box-sizing:border-box;
 }
 .input:focus{ border-color:#ff9bb5; }
 
 .row{display:flex; gap:12px; margin-top:14px;}
 .row .pill{flex:1; padding:14px 14px; text-transform:none;}
 
-.screen{display:none}
-.screen.active{display:block}
-
-.logo{
-  background:#fff;width:120px;height:120px;margin:0 auto 16px;
-  border-radius:22px;display:flex;align-items:center;justify-content:center;
+.card{
+  background:#fff;
+  border-radius:22px;
+  padding:18px;
+  margin-top:10px;
   box-shadow:0 10px 30px rgba(0,0,0,.08);
 }
-.logo img{width:90px;height:auto;display:block}
 
-.title{text-align:center;font-weight:800;margin:0}
-.subtitle{text-align:center;color:#666;margin:8px 0 0}
-
-.pill{
-  width:100%;
-  border:none;
-  border-radius:999px;
-  padding:16px;
-  font-weight:800;
-  cursor:pointer;
-  background:linear-gradient(135deg,var(--primary),var(--secondary));
-  color:var(--text);
-}
-.pill.secondary{background:#eee}
-
-.grid{display:flex;flex-direction:column;gap:12px}
-
-.card{background:#fff;border-radius:22px;padding:18px;margin-top:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);}
-
-.field{padding:10px 0;border-bottom:1px solid #eee}
+.field{padding:10px 0;border-bottom:1px solid var(--border)}
 .field:last-child{border-bottom:none}
 .label{font-size:.75rem;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:.3px}
 .value{font-size:1.05rem;font-weight:800}
+
+/* ✅ LOADING COMEL */
+.loading{
+  background:#fff;
+  border-radius:22px;
+  padding:26px 18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  text-align:center;
+}
+.spinner{
+  width:56px;height:56px;margin:0 auto 12px;
+  border-radius:50%;
+  border: 4px solid rgba(255,196,214,.55);
+  border-top: 4px solid #ff9bb5;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tiny{margin-top:8px;font-size:.9rem;color:#777}
+
+/* optional: error */
+.errorBox{
+  background:var(--dangerBg);
+  border-radius:22px;
+  padding:18px;
+  text-align:center;
+  font-weight:900;
+  color:var(--dangerText);
+}
 </style>
 </head>
 
@@ -104,8 +147,9 @@ body{
 <section id="home" class="screen active">
   <div class="logo"><img src="logopaloh.png" alt="Logo SMK Paloh"></div>
   <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
-  <p class="subtitle">Pilih Tingkatan → Masuk No IC → Papar Keputusan</p>
-  <div class="grid" style="margin-top:18px;">
+  <p class="subtitle">Pilih Tingkatan → Masuk No IC → Semak → Papar Result</p>
+
+  <div class="grid">
     <button class="pill" type="button" onclick="start(2)">Tingkatan 2</button>
     <button class="pill" type="button" onclick="start(3)">Tingkatan 3</button>
   </div>
@@ -122,10 +166,18 @@ body{
   <div class="input-wrap">
     <input id="ic" class="input" inputmode="numeric" maxlength="14" placeholder="No IC 12 digit (tanpa -)">
     <div class="row">
-      <!-- ✅ FIX: panggil semak() -->
       <button class="pill" type="button" onclick="semak()">Semak</button>
       <button class="pill secondary" type="button" onclick="goHome()">Kembali</button>
     </div>
+  </div>
+</section>
+
+<!-- ✅ LOADING -->
+<section id="loading" class="screen">
+  <div class="loading">
+    <div class="spinner"></div>
+    <div style="font-weight:900; font-size:1.05rem;">Menyemak maklumat...</div>
+    <div class="tiny">Sekejap ya 😄</div>
   </div>
 </section>
 
@@ -139,6 +191,14 @@ body{
 
   <div id="resultBox" class="card"></div>
 
+  <div class="row" style="margin-top:14px;">
+    <button class="pill secondary" type="button" onclick="goHome()">Kembali (Main Page)</button>
+  </div>
+</section>
+
+<!-- ERROR (optional, kalau nak elak alert) -->
+<section id="error" class="screen">
+  <div class="errorBox" id="errorMsg">Ada masalah.</div>
   <div class="row" style="margin-top:14px;">
     <button class="pill secondary" type="button" onclick="goHome()">Kembali (Main Page)</button>
   </div>
@@ -158,13 +218,13 @@ function show(id){
 
 function goHome(){
   tingkatan=null;
-  document.getElementById("ic").value="";
+  const ic=document.getElementById("ic");
+  if(ic) ic.value="";
   show("home");
 }
 
 function start(t){
   tingkatan=t;
-  // ✅ FIX: id yang betul = badgeTing
   document.getElementById("badgeTing").innerText="Tingkatan "+t;
   document.getElementById("ic").value="";
   show("input");
@@ -182,9 +242,15 @@ function esc(s){
     .replaceAll("'","&#039;");
 }
 
+function showError(msg){
+  // kalau you suka alert, tukar ke alert(msg)
+  document.getElementById("errorMsg").textContent = msg || "Ada masalah.";
+  show("error");
+}
+
 async function semak(){
   if(!tingkatan){
-    alert("Sila pilih Tingkatan dahulu.");
+    showError("Sila pilih Tingkatan dahulu.");
     return;
   }
 
@@ -193,9 +259,12 @@ async function semak(){
   icEl.value=ic;
 
   if(ic.length!==12){
-    alert("No IC mesti 12 digit (tanpa simbol -).");
+    showError("No IC mesti 12 digit (tanpa simbol -).");
     return;
   }
+
+  // ✅ show loading comel
+  show("loading");
 
   const url=`${apiUrl}?ting=${encodeURIComponent(tingkatan)}&mode=kelas&ic=${encodeURIComponent(ic)}`;
 
@@ -204,7 +273,7 @@ async function semak(){
     const data=await res.json();
 
     if(!data || data.ok===false){
-      alert(data?.message || "Rekod tidak dijumpai.");
+      showError(data?.message || "Rekod tidak dijumpai.");
       return;
     }
 
@@ -224,7 +293,7 @@ async function semak(){
 
   }catch(e){
     console.error(e);
-    alert("Tak dapat connect ke server / Apps Script. Cuba lagi.");
+    showError("Tak dapat connect ke server / Apps Script. Cuba lagi.");
   }
 }
 </script>
