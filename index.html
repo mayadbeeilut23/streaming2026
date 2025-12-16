@@ -47,7 +47,6 @@
 
     .header{ text-align:center; margin-bottom:22px; }
 
-    /* ✅ Logo container kemas */
     .logo-wrap{
       width:120px;
       height:120px;
@@ -190,6 +189,19 @@
 
     .tiny{ margin-top:10px; font-size:.82rem; color:#777; text-align:center; }
 
+    .summary{
+      text-align:left;
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+    .summary .line{
+      background: rgba(0,0,0,.03);
+      border: 1px solid rgba(0,0,0,.05);
+      padding:12px 14px;
+      border-radius:16px;
+      font-weight:800;
+    }
     code{ background: rgba(0,0,0,.04); padding:2px 6px; border-radius:8px; }
   </style>
 </head>
@@ -197,7 +209,7 @@
 <body>
   <div class="container">
 
-    <!-- HOME -->
+    <!-- HOME: Pilih Tingkatan -->
     <section id="home" class="screen active">
       <div class="header">
         <div class="logo-wrap">
@@ -205,7 +217,7 @@
         </div>
 
         <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
-        <p class="subtitle">Pilih tingkatan → pilih jenis semakan → masuk No IC</p>
+        <p class="subtitle">Pilih tingkatan → pilih jenis semakan → confirm → masuk No IC</p>
       </div>
 
       <div class="grid">
@@ -216,7 +228,7 @@
       <p class="note">Tip: No IC tanpa simbol <code>-</code></p>
     </section>
 
-    <!-- MODE -->
+    <!-- MODE: Pilih Jenis Semakan -->
     <section id="mode" class="screen">
       <div class="header">
         <div class="badge" id="badgeTing">Tingkatan</div>
@@ -230,11 +242,36 @@
       </div>
 
       <div class="row">
-        <button class="pill secondary" onclick="openPDFandGoHome()">Muka Depan</button>
+        <button class="pill secondary" onclick="go('home')">Kembali</button>
       </div>
     </section>
 
-    <!-- INPUT -->
+    <!-- CONFIRM: Pilihan Pelajar -->
+    <section id="confirm" class="screen">
+      <div class="header">
+        <div class="badge">Pilihan Pelajar</div>
+        <h2 class="section-title">Semak Pilihan Anda</h2>
+        <p class="subtitle">Pastikan tingkatan & jenis semakan betul sebelum teruskan</p>
+      </div>
+
+      <div class="card">
+        <div class="summary">
+          <div class="line" id="confirmTing">Tingkatan: -</div>
+          <div class="line" id="confirmMode">Jenis Semakan: -</div>
+        </div>
+
+        <div class="row">
+          <button class="pill" onclick="goToInputFromConfirm()">Teruskan</button>
+          <button class="pill secondary" onclick="go('mode')">Ubah Pilihan</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="pill secondary" onclick="goHomeWebsite()">Muka Depan Website</button>
+      </div>
+    </section>
+
+    <!-- INPUT: Masuk No IC -->
     <section id="input" class="screen">
       <div class="header">
         <div class="badge" id="badgeInfo">Tingkatan • Mode</div>
@@ -244,12 +281,12 @@
 
       <div class="card">
         <label class="input-label" for="ic">Nombor Kad Pengenalan</label>
-        <input class="input" id="ic" type="text" inputmode="numeric" maxlength="12" placeholder="12 digit sahaja" />
+        <input class="input" id="ic" type="text" inputmode="numeric" maxlength="14" placeholder="12 digit sahaja" />
         <div class="hint">Tanpa simbol <b>-</b>. Pastikan 12 digit.</div>
 
         <div class="row">
           <button class="pill" onclick="submitCheck()">Semak</button>
-          <button class="pill secondary" onclick="go('mode')">Kembali</button>
+          <button class="pill secondary" onclick="go('confirm')">Kembali</button>
         </div>
       </div>
     </section>
@@ -263,7 +300,7 @@
       </div>
     </section>
 
-    <!-- RESULT -->
+    <!-- RESULT: Papar Maklumat -->
     <section id="result" class="screen">
       <div class="header">
         <div class="badge" id="badgeResult">Keputusan</div>
@@ -275,24 +312,24 @@
 
       <div class="row">
         <button class="pill" onclick="resetToInput()">Semak Lagi</button>
-        <button class="pill secondary" onclick="openPDFandGoHome()">Muka Depan</button>
+        <button class="pill secondary" onclick="goHomeWebsite()">Muka Depan Website</button>
       </div>
 
       <div class="tiny" id="debugLine"></div>
     </section>
 
-    <!-- ERROR -->
+    <!-- ERROR: Papar Mesej Ralat -->
     <section id="error" class="screen">
       <div class="header">
         <h2 class="section-title">Ops 😅</h2>
-        <p class="subtitle">Ada masalah sikit masa semakan</p>
+        <p class="subtitle">No IC tidak sah / rekod tidak dijumpai</p>
       </div>
 
       <div class="error" id="errorMsg">Rekod tidak dijumpai.</div>
 
       <div class="row">
         <button class="pill" onclick="go('input')">Cuba Lagi</button>
-        <button class="pill secondary" onclick="openPDFandGoHome()">Muka Depan</button>
+        <button class="pill secondary" onclick="goHomeWebsite()">Muka Depan Website</button>
       </div>
 
       <div class="tiny" id="errorDebug"></div>
@@ -304,12 +341,19 @@
     // ✅ URL Apps Script kau
     const apiUrl = "https://script.google.com/macros/s/AKfycbw-Ptinh6OwlWtPhU7_BACIZi1AXKJ6ibOsVj_tHA80zHWMFH0b1CygYfhhABt2cbT4vQ/exec";
 
+    // ✅ Muka depan website (ikut flowchart)
+    const HOME_WEBSITE_URL = "https://steminspirebymaria.my.canva.site/";
+
     let selectedTing = null;     // "2" / "3"
     let selectedMode = null;     // 'kelas' / 'buku'
 
     function go(id){
       document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
       document.getElementById(id).classList.add("active");
+    }
+
+    function labelModeNice(mode){
+      return (mode === "kelas") ? "Semakan Kedudukan Kelas" : "Semakan Tarikh Pembelian Buku";
     }
 
     function selectTing(ting){
@@ -320,17 +364,28 @@
 
     function selectMode(mode){
       selectedMode = mode;
-      const labelMode = (selectedMode === "kelas") ? "Semakan Kelas" : "Semakan Buku";
-      document.getElementById("badgeInfo").textContent = "Tingkatan " + selectedTing + " • " + labelMode;
+
+      // ✅ ikut flowchart: lepas pilih jenis semakan, pergi "Pilihan Pelajar"
+      document.getElementById("confirmTing").textContent = "Tingkatan: " + (selectedTing ? ("Tingkatan " + selectedTing) : "-");
+      document.getElementById("confirmMode").textContent = "Jenis Semakan: " + (selectedMode ? labelModeNice(selectedMode) : "-");
+
+      go("confirm");
+    }
+
+    function goToInputFromConfirm(){
+      // set badge info dekat input
+      document.getElementById("badgeInfo").textContent =
+        "Tingkatan " + selectedTing + " • " + (selectedMode ? labelModeNice(selectedMode) : "-");
+
       document.getElementById("ic").value = "";
       go("input");
-      setTimeout(() => document.getElementById("ic").focus(), 100);
+      setTimeout(() => document.getElementById("ic").focus(), 120);
     }
 
     function resetToInput(){
       document.getElementById("ic").value = "";
       go("input");
-      setTimeout(() => document.getElementById("ic").focus(), 100);
+      setTimeout(() => document.getElementById("ic").focus(), 120);
     }
 
     function cleanIC(raw){
@@ -341,30 +396,25 @@
       return ic.length === 12;
     }
 
-    // ✅ buka PDF + balik home (ikut tingkatan)
-    function openPDFandGoHome(){
-      let pdfUrl = "";
-
-      if (selectedTing === "2") {
-        pdfUrl = "panduan_kelas_t2.pdf";
-      } else if (selectedTing === "3") {
-        pdfUrl = "panduan_kelas_t3.pdf";
-      } else {
-        pdfUrl = "panduan_umum.pdf";
-      }
-
-      window.open(pdfUrl, "_blank");
-      go("home");
+    // ✅ ikut flowchart: Muka Depan Website
+    function goHomeWebsite(){
+      window.location.href = HOME_WEBSITE_URL;
     }
 
     async function submitCheck(){
       const ic = cleanIC(document.getElementById("ic").value);
+      document.getElementById("ic").value = ic; // auto kemas input user
 
-      if(!selectedTing || !selectedMode || !ic){
-        showError("Sila lengkapkan Tingkatan, Jenis Semakan dan No IC.");
+      if(!selectedTing || !selectedMode){
+        showError("Sila pilih Tingkatan dan Jenis Semakan dulu.");
+        return;
+      }
+      if(!ic){
+        showError("Sila masukkan No IC.");
         return;
       }
       if(!validIC(ic)){
+        // ✅ No IC Sah? (Tidak) → Papar Mesej Ralat
         showError("No IC mesti 12 digit (tanpa simbol -).");
         return;
       }
@@ -384,11 +434,14 @@
         const data = await res.json();
 
         if(data && data.ok === false){
-          showError(data.message || "Rekod tidak dijumpai. Semak No IC.");
+          // ✅ No IC Sah? (Tidak) OR Rekod tiada → Papar Mesej Ralat
+          showError(data.message || "Rekod tidak dijumpai. Semak No IC.", "API: " + url);
           return;
         }
 
+        // ✅ No IC Sah? (Ya) → Papar Maklumat Pelajar
         showResult(data, url);
+
       }catch(err){
         showError("Tak dapat connect ke server. Cuba lagi ya. (Network/permission)", String(err));
       }
@@ -412,8 +465,9 @@
 
     function showResult(data, debugUrl=""){
       const box = document.getElementById("resultBox");
-      const labelMode = (selectedMode === "kelas") ? "Semakan Kedudukan Kelas" : "Semakan Tarikh Pembelian Buku";
-      document.getElementById("badgeResult").textContent = "Tingkatan " + selectedTing + " • " + labelMode;
+      const modeNice = labelModeNice(selectedMode);
+
+      document.getElementById("badgeResult").textContent = "Tingkatan " + selectedTing + " • " + modeNice;
 
       const el = document.getElementById("resultSub");
       el.textContent = (data && data.nama) ? "Berjaya! Ini maklumat yang dijumpai." : "Maklumat dipaparkan di bawah.";
@@ -421,26 +475,31 @@
       let html = "";
       html += field("Nama Pelajar", data.nama);
 
+      // ikut flowchart: jantina, bangsa
       if ("jantina" in data) html += field("Jantina", data.jantina);
       if ("bangsa" in data) html += field("Bangsa", data.bangsa);
 
       if(selectedMode === "kelas"){
+        // ikut flowchart: KDK, KDT, Kelas 2025, Kelas 2026, Guru Tingkatan 2026
         if ("kdk" in data) html += field("KDK", data.kdk);
         if ("kdt" in data) html += field("KDT", data.kdt);
         if ("kelas_2025" in data) html += field("Kelas 2025", data.kelas_2025);
         if ("kelas_2026" in data) html += field("Kelas 2026", data.kelas_2026);
-        if ("guru_tingkatan_2026" in data) html += field("Guru Tingkatan 2026", data.guru_tingkatan_2026);
+        if ("guru_tingkatan_2026" in data) html += field("Nama Guru Tingkatan 2026", data.guru_tingkatan_2026);
+
       } else {
-        const mapOrder = [
-          ["tarikh_pembelian", "Tarikh Pembelian Buku"],
+        // flowchart ada: Jadual Pembayaran Buku
+        // (yang lain kekal kalau Apps Script pulangkan field tambahan)
+        const priority = [
           ["jadual_pembayaran", "Jadual Pembayaran Buku"],
+          ["tarikh_pembelian", "Tarikh Pembelian Buku"],
           ["tarikh_pendaftaran", "Tarikh Pendaftaran"],
           ["tarikh_jualan", "Tarikh Jualan Buku"],
         ];
 
         let any = false;
-        mapOrder.forEach(([k,label]) => {
-          if(k in data){
+        priority.forEach(([k,label]) => {
+          if(k in (data || {})){
             html += field(label, data[k]);
             any = true;
           }
@@ -457,7 +516,6 @@
       }
 
       box.innerHTML = html;
-
       document.getElementById("debugLine").textContent = debugUrl ? ("API: " + debugUrl) : "";
       go("result");
     }
