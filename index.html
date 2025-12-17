@@ -149,11 +149,12 @@ body{
   <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
   <p class="subtitle">Pilih Tingkatan → Masuk No IC → Semak → Papar Result</p>
 
+
+  <!-- BUTTON PILL -->
   <div class="grid">
     <button class="pill" type="button" onclick="start(2)">Tingkatan 2</button>
     <button class="pill" type="button" onclick="start(3)">Tingkatan 3</button>
-
-    <!-- ✅ menu buku (yang hilang tadi) -->
+    <button class="pill" type="button" onclick="start(4)">Tingkatan 4</button>
     <button class="pill secondary" type="button" onclick="openSenaraiBuku()">Senarai Pembelian Buku</button>
   </div>
 
@@ -287,20 +288,44 @@ async function semak(){
       showError(data?.message || "Rekod tidak dijumpai.");
       return;
     }
+      
 
+
+    
     document.getElementById("badgeResult").innerText = `Tingkatan ${tingkatan} • Keputusan`;
 
-    document.getElementById("resultBox").innerHTML=`
-      <div class="field"><div class="label">Nama</div><div class="value">${esc(data.nama)}</div></div>
-      <div class="field"><div class="label">Jantina</div><div class="value">${esc(data.jantina)}</div></div>
-      <div class="field"><div class="label">Bangsa</div><div class="value">${esc(data.bangsa)}</div></div>
-      <div class="field"><div class="label">KDK</div><div class="value">${esc(data.kdk)}</div></div>
-      <div class="field"><div class="label">KDT</div><div class="value">${esc(data.kdt)}</div></div>
-      <div class="field"><div class="label">Kelas 2025</div><div class="value">${esc(data.kelas_2025)}</div></div>
-      <div class="field"><div class="label">Kelas 2026</div><div class="value">${esc(data.kelas_2026)}</div></div>
-      <div class="field"><div class="label">Guru Tingkatan 2026</div><div class="value">${esc(data.guru_tingkatan_2026)}</div></div>
-    `;
-    show("result");
+const common = `
+  <div class="field"><div class="label">Nama</div><div class="value">${esc(data.nama)}</div></div>
+  <div class="field"><div class="label">Jantina</div><div class="value">${esc(data.jantina)}</div></div>
+  <div class="field"><div class="label">Bangsa</div><div class="value">${esc(data.bangsa)}</div></div>
+  <div class="field"><div class="label">Kelas 2025</div><div class="value">${esc(data.kelas_2025)}</div></div>
+  <div class="field"><div class="label">Kelas 2026</div><div class="value">${esc(data.kelas_2026)}</div></div>
+  <div class="field"><div class="label">Guru Tingkatan 2026</div><div class="value">${esc(data.guru_tingkatan_2026)}</div></div>
+`;
+
+const t2t3 = `
+  <div class="field"><div class="label">KDK</div><div class="value">${esc(data.kdk)}</div></div>
+  <div class="field"><div class="label">KDT</div><div class="value">${esc(data.kdt)}</div></div>
+`;
+
+const t4extra = `
+  <div class="field"><div class="label">BIL</div><div class="value">${esc(data.bil)}</div></div>
+`;
+
+document.getElementById("resultBox").innerHTML =
+  (tingkatan === 4 ? (t4extra + common) : (common.slice(0,0) + `
+    <div class="field"><div class="label">Nama</div><div class="value">${esc(data.nama)}</div></div>
+    <div class="field"><div class="label">Jantina</div><div class="value">${esc(data.jantina)}</div></div>
+    <div class="field"><div class="label">Bangsa</div><div class="value">${esc(data.bangsa)}</div></div>
+    ${t2t3}
+    <div class="field"><div class="label">Kelas 2025</div><div class="value">${esc(data.kelas_2025)}</div></div>
+    <div class="field"><div class="label">Kelas 2026</div><div class="value">${esc(data.kelas_2026)}</div></div>
+    <div class="field"><div class="label">Guru Tingkatan 2026</div><div class="value">${esc(data.guru_tingkatan_2026)}</div></div>
+  `));
+
+
+
+
 
   }catch(e){
     console.error(e);
