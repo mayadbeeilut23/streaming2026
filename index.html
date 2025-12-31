@@ -1,156 +1,187 @@
 <!doctype html>
 <html lang="ms">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sistem Semakan Kedudukan Kelas</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistem Semakan Kedudukan Kelas</title>
 
-<style>
-:root{
-  --primary:#ffc4d6; --secondary:#ffe4d4; --bg1:#fff7cc; --bg2:#fff1b8;
-  --text:#2d2d2d; --muted:#666; --border:#eee; --card:#fff;
-  --dangerBg:#ffe5e5; --dangerText:#b30000; --okBg:#e9fff4; --okText:#0f7a4a;
-}
-*{box-sizing:border-box}
-body{
-  margin:0; font-family:Segoe UI, system-ui, -apple-system, Arial, sans-serif;
-  background:linear-gradient(135deg,var(--bg1),var(--bg2));
-  min-height:100vh; display:flex; justify-content:center; align-items:center;
-  padding:24px; color:var(--text);
-}
-.container{max-width:560px;width:100%}
-.screen{display:none}
-.screen.active{display:block}
-.header{text-align:center;margin-bottom:18px}
-.badge{
-  display:inline-block;padding:8px 12px;border-radius:999px;
-  font-weight:900;font-size:.85rem;background:rgba(255,196,214,.35);margin:0 auto 10px;
-}
-.logo{
-  background:#fff;width:120px;height:120px;margin:0 auto 16px;border-radius:22px;
-  display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,.08);
-}
-.logo img{width:92px;height:auto;display:block}
-.title{text-align:center;font-weight:900;margin:0}
-.subtitle{text-align:center;color:var(--muted);margin:8px 0 0;line-height:1.35}
-.grid{display:flex;flex-direction:column;gap:12px;margin-top:18px}
-.pill{
-  width:100%;border:none;border-radius:999px;padding:16px 18px;font-weight:900;
-  cursor:pointer;background:linear-gradient(135deg,var(--primary),var(--secondary));
-  color:var(--text);box-shadow:0 10px 22px rgba(255,196,214,.35);
-  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
-}
-.pill:hover{transform:scale(1.03);box-shadow:0 14px 30px rgba(255,196,214,.55);filter:saturate(1.03)}
-.pill:active{transform:scale(.98)}
-.pill.secondary{background:#f1f1f1;box-shadow:0 10px 22px rgba(0,0,0,.10)}
-.input-wrap{
-  background:#fff;border-radius:22px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.08);
-}
-.input{
-  width:100%;padding:14px 16px;border-radius:999px;border:2px solid var(--primary);
-  font-size:1rem;outline:none;
-}
-.input:focus{border-color:#ff9bb5}
-.row{display:flex;gap:12px;margin-top:14px}
-.row .pill{flex:1;padding:14px 14px}
-.card{
-  background:#fff;border-radius:22px;padding:18px;margin-top:10px;
-  box-shadow:0 10px 30px rgba(0,0,0,.08);
-}
-.field{padding:10px 0;border-bottom:1px solid var(--border)}
-.field:last-child{border-bottom:none}
-.label{font-size:.75rem;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:.3px}
-.value{font-size:1.05rem;font-weight:900}
-.loading{
-  background:#fff;border-radius:22px;padding:26px 18px;box-shadow:0 10px 30px rgba(0,0,0,.08);
-  text-align:center;
-}
-.spinner{
-  width:56px;height:56px;margin:0 auto 12px;border-radius:50%;
-  border:4px solid rgba(255,196,214,.55);border-top:4px solid #ff9bb5;
-  animation:spin 1s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.tiny{margin-top:10px;font-size:.9rem;color:#777}
-.errorBox{
-  background:var(--dangerBg);border-radius:22px;padding:18px;text-align:center;
-  font-weight:900;color:var(--dangerText);
-}
-.okBox{
-  background:var(--okBg);border-radius:22px;padding:14px 16px;text-align:center;
-  font-weight:900;color:var(--okText);margin-bottom:10px;
-}
-</style>
+  <style>
+    :root{
+      --primary:#ffc4d6;
+      --secondary:#ffe4d4;
+      --bg1:#fff7cc;
+      --bg2:#fff1b8;
+      --text:#2d2d2d;
+      --muted:#666;
+      --card:#ffffff;
+      --border:#eee;
+      --dangerBg:#ffe5e5;
+      --dangerText:#b30000;
+      --okBg:#e9fff4;
+      --okText:#0f7a4a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Segoe UI, system-ui, -apple-system, Arial, sans-serif;
+      background:linear-gradient(135deg,var(--bg1),var(--bg2));
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:24px;
+      color:var(--text);
+    }
+    .container{max-width:560px;width:100%}
+    .screen{display:none}
+    .screen.active{display:block}
+    .header{text-align:center;margin-bottom:18px;}
+    .badge{
+      display:inline-block;padding:8px 12px;border-radius:999px;
+      font-weight:900;font-size:.85rem;background:rgba(255,196,214,.35);
+      margin:0 auto 10px;
+    }
+    .logo{
+      background:#fff;width:120px;height:120px;margin:0 auto 16px;
+      border-radius:22px;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 10px 30px rgba(0,0,0,.08);
+    }
+    .logo img{width:92px;height:auto;display:block}
+    .title{text-align:center;font-weight:900;margin:0}
+    .subtitle{text-align:center;color:var(--muted);margin:8px 0 0;line-height:1.35}
+    .grid{display:flex;flex-direction:column;gap:12px;margin-top:18px;}
+    .pill{
+      width:100%;border:none;border-radius:999px;padding:16px 18px;font-weight:900;
+      cursor:pointer;background:linear-gradient(135deg,var(--primary),var(--secondary));
+      color:var(--text);box-shadow:0 10px 22px rgba(255,196,214,.35);
+      transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .pill:hover{transform:scale(1.03);box-shadow:0 14px 30px rgba(255,196,214,.55);filter:saturate(1.03)}
+    .pill:active{transform:scale(.98)}
+    .pill.secondary{
+      background:#f1f1f1;box-shadow:0 10px 22px rgba(0,0,0,.10);
+    }
+    .pill.secondary:hover{box-shadow:0 14px 30px rgba(0,0,0,.14)}
+    .input-wrap{
+      background:#fff;border-radius:22px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.08);
+      overflow:hidden;
+    }
+    .input{
+      width:100%;padding:14px 16px;border-radius:999px;border:2px solid var(--primary);
+      font-size:1rem;outline:none;
+    }
+    .input:focus{border-color:#ff9bb5}
+    .row{display:flex;gap:12px;margin-top:14px;}
+    .row .pill{flex:1;padding:14px 14px}
+    .card{
+      background:#fff;border-radius:22px;padding:18px;margin-top:10px;
+      box-shadow:0 10px 30px rgba(0,0,0,.08);
+    }
+    .field{padding:10px 0;border-bottom:1px solid var(--border)}
+    .field:last-child{border-bottom:none}
+    .label{font-size:.75rem;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:.3px}
+    .value{font-size:1.05rem;font-weight:900}
+    .loading{
+      background:#fff;border-radius:22px;padding:26px 18px;box-shadow:0 10px 30px rgba(0,0,0,.08);
+      text-align:center;
+    }
+    .spinner{
+      width:56px;height:56px;margin:0 auto 12px;border-radius:50%;
+      border:4px solid rgba(255,196,214,.55);border-top:4px solid #ff9bb5;
+      animation:spin 1s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .tiny{margin-top:10px;font-size:.9rem;color:#777}
+    .errorBox{
+      background:var(--dangerBg);border-radius:22px;padding:18px;text-align:center;
+      font-weight:900;color:var(--dangerText);
+    }
+    .okBox{
+      background:var(--okBg);border-radius:22px;padding:14px 16px;text-align:center;
+      font-weight:900;color:var(--okText);margin-bottom:10px;
+    }
+  </style>
 </head>
 
 <body>
 <div class="container">
 
-<section id="home" class="screen active">
-  <div class="logo"><img src="logopaloh.png" alt="Logo SMK Paloh"></div>
-  <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
-  <p class="subtitle">Pilih Tingkatan → Masuk No IC → Semak → Papar Maklumat</p>
+  <!-- HOME -->
+  <section id="home" class="screen active">
+    <div class="logo"><img src="logopaloh.png" alt="Logo SMK Paloh"></div>
+    <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
+    <p class="subtitle">Pilih Tingkatan → Masuk No IC → Semak → Papar Maklumat</p>
 
-  <div class="grid">
-    <button class="pill" id="btnT2" type="button">Tingkatan 2</button>
-    <button class="pill" id="btnT3" type="button">Tingkatan 3</button>
-    <button class="pill" id="btnT4" type="button">Tingkatan 4</button>
-  </div>
-
-  <div class="tiny">Tip: Boleh paste IC yang ada dash (-), sistem auto buang.</div>
-</section>
-
-<section id="input" class="screen">
-  <div class="header">
-    <div class="badge" id="badgeTing">Tingkatan</div>
-    <h2 class="title" style="font-size:1.25rem;">Masukkan No IC</h2>
-    <p class="subtitle">Contoh: 051234567890 (12 digit)</p>
-  </div>
-
-  <div class="input-wrap">
-    <input id="ic" class="input" inputmode="numeric" maxlength="20" placeholder="No IC 12 digit">
-    <div class="row">
-      <button class="pill" id="btnSemak" type="button">Semak</button>
-      <button class="pill secondary" id="btnBackHome1" type="button">Kembali</button>
+    <div class="grid">
+      <button class="pill" id="btnT2" type="button">Tingkatan 2</button>
+      <button class="pill" id="btnT3" type="button">Tingkatan 3</button>
+      <button class="pill" id="btnT4" type="button">Tingkatan 4</button>
+      <button class="pill secondary" id="btnBuku" type="button">Senarai Pembelian Buku (PDF)</button>
     </div>
-  </div>
-</section>
 
-<section id="loading" class="screen">
-  <div class="loading">
-    <div class="spinner"></div>
-    <div style="font-weight:900; font-size:1.05rem;">Menyemak maklumat...</div>
-    <div class="tiny">Sekejap ya 😄</div>
-  </div>
-</section>
+    <div class="tiny">Tip: boleh paste IC yang ada dash (-), sistem auto buang.</div>
+  </section>
 
-<section id="result" class="screen">
-  <div class="header">
-    <div class="badge" id="badgeResult">Keputusan</div>
-    <h2 class="title" style="font-size:1.25rem;">Maklumat Pelajar</h2>
-    <p class="subtitle">Maklumat dijumpai.</p>
-  </div>
+  <!-- INPUT -->
+  <section id="input" class="screen">
+    <div class="header">
+      <div class="badge" id="badgeTing">Tingkatan</div>
+      <h2 class="title" style="font-size:1.25rem;">Masukkan No IC</h2>
+      <p class="subtitle">Contoh: 051234567890 (12 digit)</p>
+    </div>
 
-  <div class="okBox">✅ Rekod Dijumpai</div>
-  <div id="resultBox" class="card"></div>
+    <div class="input-wrap">
+      <input id="ic" class="input" inputmode="numeric" maxlength="20" placeholder="No IC 12 digit">
+      <div class="row">
+        <button class="pill" id="btnSemak" type="button">Semak</button>
+        <button class="pill secondary" id="btnBackHome1" type="button">Kembali</button>
+      </div>
+    </div>
+  </section>
 
-  <div class="row" style="margin-top:14px;">
-    <button class="pill secondary" id="btnBackHome2" type="button">Kembali (Main Page)</button>
-  </div>
-</section>
+  <!-- LOADING -->
+  <section id="loading" class="screen">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div style="font-weight:900; font-size:1.05rem;">Menyemak maklumat...</div>
+      <div class="tiny">Sekejap ya 😄</div>
+    </div>
+  </section>
 
-<section id="error" class="screen">
-  <div class="errorBox" id="errorMsg">Ada masalah.</div>
-  <div class="row" style="margin-top:14px;">
-    <button class="pill secondary" id="btnTryAgain" type="button">Cuba Lagi</button>
-    <button class="pill secondary" id="btnBackHome3" type="button">Kembali (Main Page)</button>
-  </div>
-</section>
+  <!-- RESULT -->
+  <section id="result" class="screen">
+    <div class="header">
+      <div class="badge" id="badgeResult">Keputusan</div>
+      <h2 class="title" style="font-size:1.25rem;">Maklumat Pelajar</h2>
+      <p class="subtitle">Maklumat dijumpai.</p>
+    </div>
+
+    <div class="okBox">✅ Rekod Dijumpai</div>
+    <div id="resultBox" class="card"></div>
+
+    <div class="row" style="margin-top:14px;">
+      <button class="pill secondary" id="btnBackHome2" type="button">Kembali (Main Page)</button>
+    </div>
+  </section>
+
+  <!-- ERROR -->
+  <section id="error" class="screen">
+    <div class="errorBox" id="errorMsg">Ada masalah.</div>
+    <div class="row" style="margin-top:14px;">
+      <button class="pill secondary" id="btnTryAgain" type="button">Cuba Lagi</button>
+      <button class="pill secondary" id="btnBackHome3" type="button">Kembali (Main Page)</button>
+    </div>
+  </section>
 
 </div>
 
 <script>
+/** ✅ LETAK WEB APP URL BARU AWAK */
 const apiUrl = "https://script.google.com/macros/s/AKfycbxKxmXor7WifwKQLD73CSONxVycnPU61J0Grg5dMunV2_Ty93eW9aSxxAt9CIXbXu8D/exec";
+
+/** ✅ PDF dalam repo */
+const SENARAI_BUKU_URL = "senarai_pembelian_buku.pdf";
+
 let tingkatan = null;
 
 function show(id){
@@ -158,52 +189,100 @@ function show(id){
   const el = document.getElementById(id);
   if(el) el.classList.add("active");
 }
-function goHome(){ tingkatan=null; document.getElementById("ic").value=""; show("home"); }
-function backToInput(){ show("input"); setTimeout(()=>document.getElementById("ic").focus(),80); }
-function start(t){
-  tingkatan=t;
-  document.getElementById("badgeTing").innerText="Tingkatan "+t;
-  document.getElementById("ic").value="";
+
+function goHome(){
+  tingkatan = null;
+  const ic = document.getElementById("ic");
+  if(ic) ic.value = "";
+  show("home");
+}
+
+function backToInput(){
   show("input");
   setTimeout(()=>document.getElementById("ic").focus(),80);
 }
-function cleanIC(v){ return (v||"").replace(/\D/g,""); }
+
+function start(t){
+  tingkatan = t;
+  document.getElementById("badgeTing").innerText = "Tingkatan " + t;
+  document.getElementById("ic").value = "";
+  show("input");
+  setTimeout(()=>document.getElementById("ic").focus(),80);
+}
+
+function openSenaraiBuku(){
+  window.open(SENARAI_BUKU_URL, "_blank");
+}
+
+function cleanIC(v){ return (v || "").replace(/\D/g, ""); }
+
 function esc(s){
   return String(s ?? "-")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
-function showError(msg){ document.getElementById("errorMsg").textContent = msg || "Ada masalah."; show("error"); }
+
+function showError(msg){
+  document.getElementById("errorMsg").textContent = msg || "Ada masalah.";
+  show("error");
+}
 
 async function semak(){
-  if(!tingkatan) return showError("Sila pilih Tingkatan dahulu.");
-  const icEl=document.getElementById("ic");
-  const ic=cleanIC(icEl.value); icEl.value=ic;
-  if(ic.length!==12) return showError("No IC mesti 12 digit (tanpa simbol -).");
+  if(!tingkatan){
+    showError("Sila pilih Tingkatan dahulu.");
+    return;
+  }
+
+  const icEl = document.getElementById("ic");
+  const ic = cleanIC(icEl.value);
+  icEl.value = ic;
+
+  if(ic.length !== 12){
+    showError("No IC mesti 12 digit (tanpa simbol -).");
+    return;
+  }
 
   show("loading");
+
+  // mode=kelas, ting=2/3/4, ic=xxxxxxxxxxxx
   const url = `${apiUrl}?mode=kelas&ting=${encodeURIComponent(tingkatan)}&ic=${encodeURIComponent(ic)}`;
 
   try{
-    const res=await fetch(url,{method:"GET"});
-    if(!res.ok) return showError("Server response error. Cuba lagi.");
+    const res = await fetch(url, { method:"GET" });
+    const text = await res.text();
 
-    const data=await res.json();
-    if(!data || data.ok===false) return showError(data?.message || "Rekod tidak dijumpai.");
+    // kadang-kadang Apps Script return HTML (error page). kita guard.
+    let data;
+    try { data = JSON.parse(text); }
+    catch(err){
+      console.error("Raw response:", text);
+      showError("API return bukan JSON. Semak deployment Apps Script.");
+      return;
+    }
+
+    if(!data || data.ok === false){
+      showError(data?.message || "Rekod tidak dijumpai.");
+      return;
+    }
 
     document.getElementById("badgeResult").innerText = `Tingkatan ${tingkatan} • Keputusan`;
 
+    // ✅ Ikut susunan yang awak nak:
     document.getElementById("resultBox").innerHTML = `
-      <div class="field"><div class="label">IC</div><div class="value">${esc(data.ic)}</div></div>
-      <div class="field"><div class="label">NAMA</div><div class="value">${esc(data.nama)}</div></div>
-      <div class="field"><div class="label">KELAS_2025</div><div class="value">${esc(data.kelas_2025)}</div></div>
-      <div class="field"><div class="label">KELAS_2026</div><div class="value">${esc(data.kelas_2026)}</div></div>
-      <div class="field"><div class="label">JANTINA</div><div class="value">${esc(data.jantina)}</div></div>
-      <div class="field"><div class="label">GURU_TINGKATAN_2026</div><div class="value">${esc(data.guru_tingkatan_2026)}</div></div>
+      <div class="field"><div class="label">IC</div><div class="value">${esc(data.IC)}</div></div>
+      <div class="field"><div class="label">NAMA</div><div class="value">${esc(data.NAMA)}</div></div>
+      <div class="field"><div class="label">KELAS 2025</div><div class="value">${esc(data.KELAS_2025)}</div></div>
+      <div class="field"><div class="label">KELAS 2026</div><div class="value">${esc(data.KELAS_2026)}</div></div>
+      <div class="field"><div class="label">JANTINA</div><div class="value">${esc(data.JANTINA)}</div></div>
+      <div class="field"><div class="label">GURU TINGKATAN 2026</div><div class="value">${esc(data.GURU_TINGKATAN_2026)}</div></div>
     `;
+
     show("result");
-  }catch(err){
-    console.error(err);
+  }catch(e){
+    console.error(e);
     showError("Tak dapat connect ke server / Apps Script. Cuba lagi.");
   }
 }
@@ -212,10 +291,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnT2").addEventListener("click", () => start(2));
   document.getElementById("btnT3").addEventListener("click", () => start(3));
   document.getElementById("btnT4").addEventListener("click", () => start(4));
+  document.getElementById("btnBuku").addEventListener("click", openSenaraiBuku);
+
   document.getElementById("btnSemak").addEventListener("click", semak);
+
   document.getElementById("btnBackHome1").addEventListener("click", goHome);
   document.getElementById("btnBackHome2").addEventListener("click", goHome);
   document.getElementById("btnBackHome3").addEventListener("click", goHome);
+
   document.getElementById("btnTryAgain").addEventListener("click", backToInput);
 });
 </script>
