@@ -113,10 +113,11 @@ body{
   <p class="subtitle">Pilih Tingkatan → Masuk No IC → Semak → Papar Maklumat</p>
 
   <div class="grid">
-    <button class="pill" id="btnT2" type="button">Tingkatan 2</button>
-    <button class="pill" id="btnT3" type="button">Tingkatan 3</button>
-    <button class="pill" id="btnT4" type="button">Tingkatan 4</button>
-    <button class="pill secondary" id="btnBuku" type="button">Senarai Pembelian Buku (PDF)</button>
+    <!-- fallback onclick (kalau eventListener tak attach) -->
+    <button class="pill" id="btnT2" type="button" onclick="goInput('2')">Tingkatan 2</button>
+    <button class="pill" id="btnT3" type="button" onclick="goInput('3')">Tingkatan 3</button>
+    <button class="pill" id="btnT4" type="button" onclick="goInput('4')">Tingkatan 4</button>
+    <button class="pill secondary" id="btnBuku" type="button" onclick="openBuku()">Senarai Pembelian Buku (PDF)</button>
   </div>
 
   <div class="tiny">Tip: Boleh paste IC yang ada dash (-), sistem auto buang.</div>
@@ -133,8 +134,8 @@ body{
   <div class="input-wrap">
     <input id="ic" class="input" inputmode="numeric" maxlength="20" placeholder="No IC 12 digit">
     <div class="row">
-      <button class="pill" id="btnSemak" type="button">Semak</button>
-      <button class="pill secondary" id="btnBackHome1" type="button">Kembali</button>
+      <button class="pill" id="btnSemak" type="button" onclick="semak()">Semak</button>
+      <button class="pill secondary" id="btnBackHome1" type="button" onclick="backHome()">Kembali</button>
     </div>
   </div>
 </section>
@@ -160,7 +161,7 @@ body{
   <div id="resultBox" class="card"></div>
 
   <div class="row" style="margin-top:14px;">
-    <button class="pill secondary" id="btnBackHome2" type="button">Kembali (Main Page)</button>
+    <button class="pill secondary" id="btnBackHome2" type="button" onclick="backHome()">Kembali (Main Page)</button>
   </div>
 </section>
 
@@ -168,49 +169,27 @@ body{
 <section id="error" class="screen">
   <div class="errorBox" id="errorMsg">Ada masalah.</div>
   <div class="row" style="margin-top:14px;">
-    <button class="pill secondary" id="btnTryAgain" type="button">Cuba Lagi</button>
-    <button class="pill secondary" id="btnBackHome3" type="button">Kembali (Main Page)</button>
+    <button class="pill secondary" id="btnTryAgain" type="button" onclick="tryAgain()">Cuba Lagi</button>
+    <button class="pill secondary" id="btnBackHome3" type="button" onclick="backHome()">Kembali (Main Page)</button>
   </div>
 </section>
 
 </div>
 
 <script>
-// ====== WEBAPP URL (Apps Script) ======
+// ====== PENTING: letak global supaya onclick boleh panggil ======
 const WEBAPP = "https://script.google.com/macros/s/AKfycby0LB5uKp4eFTvEhwKy5aGAGqriWSanOQZHIbTNAHS7pl6S4G2CdEBovk88SmCqxy7A/exec";
 
-// ====== NAV SCREEN ======
+let selectedTing = "";
+
+// ----- NAV SCREEN -----
 function showScreen(id){
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   const el = document.getElementById(id);
   if (el) el.classList.add("active");
 }
 
-// ====== STATE ======
-let selectedTing = "";
-
-// ====== ELEMENTS ======
-const badgeTing = document.getElementById("badgeTing");
-const badgeResult = document.getElementById("badgeResult");
-const icInput = document.getElementById("ic");
-const resultBox = document.getElementById("resultBox");
-const errorMsg = document.getElementById("errorMsg");
-
-// Buttons
-const btnT2 = document.getElementById("btnT2");
-const btnT3 = document.getElementById("btnT3");
-const btnT4 = document.getElementById("btnT4");
-const btnBuku = document.getElementById("btnBuku");
-
-const btnSemak = document.getElementById("btnSemak");
-const btnBackHome1 = document.getElementById("btnBackHome1");
-
-const btnBackHome2 = document.getElementById("btnBackHome2");
-
-const btnTryAgain = document.getElementById("btnTryAgain");
-const btnBackHome3 = document.getElementById("btnBackHome3");
-
-// ====== HELPERS ======
+// ----- HELPERS -----
 function normalizeIC(v){
   let s = String(v || "").trim().replace(/[^\d]/g, "");
   if (s && s.length < 12) s = s.padStart(12, "0");
@@ -218,8 +197,6 @@ function normalizeIC(v){
 }
 
 function buildResultHTML(data){
-  // JSON dari Apps Script u return KEY HURUF BESAR:
-  // IC, NAMA, KELAS_2025, KELAS_2026, JANTINA, GURU_TINGKATAN_2026
   const rows = [
     ["IC", data.IC],
     ["NAMA", data.NAMA],
@@ -228,7 +205,6 @@ function buildResultHTML(data){
     ["JANTINA", data.JANTINA],
     ["GURU TINGKATAN 2026", data.GURU_TINGKATAN_2026],
   ];
-
   return rows.map(([label, value]) => `
     <div class="field">
       <div class="label">${label}</div>
@@ -237,57 +213,52 @@ function buildResultHTML(data){
   `).join("");
 }
 
-// ====== HOME -> INPUT ======
+// ====== ACTIONS (dipanggil oleh onclick juga) ======
 function goInput(ting){
   selectedTing = String(ting);
-  badgeTing.textContent = `Tingkatan ${selectedTing}`;
-  icInput.value = "";
+  const badgeTing = document.getElementById("badgeTing");
+  if (badgeTing) badgeTing.textContent = `Tingkatan ${selectedTing}`;
+  const icInput = document.getElementById("ic");
+  if (icInput) icInput.value = "";
   showScreen("input");
-  setTimeout(() => icInput.focus(), 50);
+  setTimeout(() => icInput && icInput.focus(), 50);
 }
 
-btnT2.addEventListener("click", () => goInput("2"));
-btnT3.addEventListener("click", () => goInput("3"));
-btnT4.addEventListener("click", () => goInput("4"));
-
-// PDF (tukar ikut nama file PDF u dalam folder GitHub)
-btnBuku.addEventListener("click", () => {
-  window.open("senarai_buku.pdf", "_blank");
-});
-
-// ====== BACK HOME ======
 function backHome(){
   selectedTing = "";
   showScreen("home");
 }
-btnBackHome1.addEventListener("click", backHome);
-btnBackHome2.addEventListener("click", backHome);
-btnBackHome3.addEventListener("click", backHome);
 
-// ====== TRY AGAIN ======
-btnTryAgain.addEventListener("click", () => {
+function tryAgain(){
   showScreen("input");
-  setTimeout(() => icInput.focus(), 50);
-});
+  const icInput = document.getElementById("ic");
+  setTimeout(() => icInput && icInput.focus(), 50);
+}
 
-// ====== SEMAK ======
-btnSemak.addEventListener("click", async () => {
-  const ic = normalizeIC(icInput.value);
+function openBuku(){
+  window.open("senarai_buku.pdf", "_blank");
+}
+
+async function semak(){
+  const icInput = document.getElementById("ic");
+  const ic = normalizeIC(icInput ? icInput.value : "");
+
+  const errorMsg = document.getElementById("errorMsg");
 
   if (!selectedTing){
-    errorMsg.textContent = "Tingkatan belum dipilih. Sila pilih Tingkatan 2/3/4.";
+    if (errorMsg) errorMsg.textContent = "Tingkatan belum dipilih. Sila pilih Tingkatan 2/3/4.";
     showScreen("error");
     return;
   }
 
   if (!ic){
-    errorMsg.textContent = "IC kosong. Sila masukkan IC 12 digit.";
+    if (errorMsg) errorMsg.textContent = "IC kosong. Sila masukkan IC 12 digit.";
     showScreen("error");
     return;
   }
 
   if (ic.length !== 12){
-    errorMsg.textContent = "IC mesti 12 digit. Contoh: 051234567890";
+    if (errorMsg) errorMsg.textContent = "IC mesti 12 digit. Contoh: 051234567890";
     showScreen("error");
     return;
   }
@@ -300,24 +271,33 @@ btnSemak.addEventListener("click", async () => {
     const data = await res.json();
 
     if (!data.ok){
-      errorMsg.textContent = data.message || "Rekod tidak dijumpai.";
+      if (errorMsg) errorMsg.textContent = data.message || "Rekod tidak dijumpai.";
       showScreen("error");
       return;
     }
 
-    badgeResult.textContent = `Tingkatan ${selectedTing} • Keputusan`;
-    resultBox.innerHTML = buildResultHTML(data);
+    const badgeResult = document.getElementById("badgeResult");
+    if (badgeResult) badgeResult.textContent = `Tingkatan ${selectedTing} • Keputusan`;
+
+    const resultBox = document.getElementById("resultBox");
+    if (resultBox) resultBox.innerHTML = buildResultHTML(data);
+
     showScreen("result");
 
   }catch(err){
-    errorMsg.textContent = "Gagal sambung ke server. Sila cuba lagi. (" + err.message + ")";
+    if (errorMsg) errorMsg.textContent = "Gagal sambung ke server. (" + err.message + ")";
     showScreen("error");
   }
-});
+}
 
-// Enter key untuk semak
-icInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") btnSemak.click();
+// ====== EXTRA: kalau tekan Enter dalam input IC ======
+document.addEventListener("DOMContentLoaded", () => {
+  const icInput = document.getElementById("ic");
+  if (icInput){
+    icInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") semak();
+    });
+  }
 });
 </script>
 
