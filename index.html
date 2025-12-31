@@ -1,334 +1,173 @@
-<!doctype html>
-<html lang="ms">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sistem Semakan Kedudukan Kelas</title>
+const SS_ID = "1kPKu3SBQ6m8KHRhR-4pvtK6sSVzpKlFi8-A-ru8pfV4";
 
-<style>
-:root{
-  --primary:#ffc4d6;
-  --secondary:#ffe4d4;
-  --bg1:#fff7cc;
-  --bg2:#fff1b8;
-  --text:#2d2d2d;
-  --muted:#666;
-  --border:#eee;
-  --dangerBg:#ffe5e5;
-  --dangerText:#b30000;
-  --okBg:#e9fff4;
-  --okText:#0f7a4a;
+// mapping tab ikut tingkatan
+const TAB_BY_TING = {
+  "2": "F22026",
+  "3": "F32026",
+  "4": "F42026"
+};
+
+// Field yang kita nak return
+const WANTED_HEADERS = [
+  "IC",
+  "NAMA",
+  "KELAS_2025",
+  "KELAS_2026",
+  "JANTINA",
+  "GURU_TINGKATAN_2026"
+];
+
+function doGet(e) {
+  const ting = String(e?.parameter?.ting || "");
+  const icRaw = String(e?.parameter?.ic || "");
+  const mode = String(e?.parameter?.mode || "");
+
+  if (mode !== "kelas") {
+    return json_({ ok: false, message: "Mode tak sah. Gunakan mode=kelas" });
+  }
+
+  const tabName = TAB_BY_TING[ting];
+  if (!tabName) {
+    return json_({ ok: false, message: "Tingkatan tidak sah (hanya 2, 3, 4)." });
+  }
+
+  const res = findStudentSmart_(tabName, icRaw);
+  return json_(res);
 }
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Segoe UI, system-ui, -apple-system, Arial, sans-serif;
-  background:linear-gradient(135deg,var(--bg1),var(--bg2));
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:24px;
-  color:var(--text);
+
+function findStudentSmart_(tabName, icRaw) {
+  const ic = normalizeIC_(icRaw);
+  if (!ic) return { ok: false, message: "IC kosong." };
+  if (ic.length !== 12) return { ok: false, message: "IC mesti 12 digit." };
+
+  const ss = SpreadsheetApp.openById(SS_ID);
+  const sh = ss.getSheetByName(tabName);
+  if (!sh) return { ok: false, message: `Tab ${tabName} tak wujud.` };
+
+  const lastRow = sh.getLastRow();
+  const lastCol = sh.getLastColumn();
+  if (lastRow < 2) return { ok: false, message: "Data kosong." };
+
+  // Ambil header row 1
+  const headerRow = sh.getRange(1, 1, 1, lastCol).getDisplayValues()[0];
+  const headerMap = buildHeaderMap_(headerRow);
+
+  // Ambil data (row 2 ke bawah)
+  const values = sh.getRange(2, 1, lastRow - 1, lastCol).getDisplayValues();
+
+  // 1) Cuba cari kolum IC guna header "IC"
+  let icCol = headerMap["IC"] || null;
+
+  // Kalau jumpa kolum IC, validate sama ada nampak macam IC (12 digit)
+  if (icCol) {
+    const ok = sampleLooksLikeIC_(values, icCol);
+    if (!ok) icCol = null; // header IC tapi data bukan IC -> fallback scan
+  }
+
+  // 2) Kalau tak confident, scan semua kolum cari yang match IC input
+  if (!icCol) {
+    icCol = detectICColumnByMatchingInput_(values, ic);
+    if (!icCol) return { ok: false, message: "Kolum IC tidak dapat dikesan (header/data tak konsisten)." };
+  }
+
+  // 3) Cari row yang match IC
+  const rowIndex = findRowByIC_(values, icCol, ic);
+  if (rowIndex === -1) return { ok: false, message: "Rekod tidak dijumpai." };
+
+  const row = values[rowIndex]; // array 0-indexed
+
+  // Helper to get value by header name, fallback empty
+  const getByHeader = (h) => {
+    const col = headerMap[h];
+    if (!col) return "-";
+    return row[col - 1] || "-";
+  };
+
+  // Untuk IC: ambil dari icCol yang kita detect (paling reliable)
+  const icValue = normalizeIC_(row[icCol - 1]) || ic;
+
+  // Build output ikut order yang user nak
+  return {
+    ok: true,
+    ic: icValue,
+    nama: getByHeader("NAMA"),
+    kelas_2025: getByHeader("KELAS_2025"),
+    kelas_2026: getByHeader("KELAS_2026"),
+    jantina: getByHeader("JANTINA"),
+    guru_tingkatan_2026: getByHeader("GURU_TINGKATAN_2026")
+  };
 }
-.container{max-width:560px;width:100%}
-.screen{display:none}
-.screen.active{display:block}
-.header{text-align:center;margin-bottom:18px;}
-.badge{
-  display:inline-block;padding:8px 12px;border-radius:999px;
-  font-weight:900;font-size:.85rem;background:rgba(255,196,214,.35);
-  margin:0 auto 10px;
-}
-.logo{
-  background:#fff;width:120px;height:120px;margin:0 auto 16px;
-  border-radius:22px;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 10px 30px rgba(0,0,0,.08);
-}
-.logo img{width:92px;height:auto;display:block}
-.title{text-align:center;font-weight:900;margin:0}
-.subtitle{text-align:center;color:var(--muted);margin:8px 0 0;line-height:1.35}
-.grid{display:flex;flex-direction:column;gap:12px;margin-top:18px;}
-.pill{
-  width:100%;border:none;border-radius:999px;padding:16px 18px;font-weight:900;
-  cursor:pointer;background:linear-gradient(135deg,var(--primary),var(--secondary));
-  color:var(--text);box-shadow:0 10px 22px rgba(255,196,214,.35);
-  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
-}
-.pill:hover{transform:scale(1.03);box-shadow:0 14px 30px rgba(255,196,214,.55);filter:saturate(1.03)}
-.pill:active{transform:scale(.98)}
-.pill.secondary{
-  background:#f1f1f1;box-shadow:0 10px 22px rgba(0,0,0,.10);
-}
-.pill.secondary:hover{box-shadow:0 14px 30px rgba(0,0,0,.14)}
-.input-wrap{
-  background:#fff;border-radius:22px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.08);
-  overflow:hidden;
-}
-.input{
-  width:100%;padding:14px 16px;border-radius:999px;border:2px solid var(--primary);
-  font-size:1rem;outline:none;
-}
-.input:focus{border-color:#ff9bb5}
-.row{display:flex;gap:12px;margin-top:14px;}
-.row .pill{flex:1;padding:14px 14px}
-.card{
-  background:#fff;border-radius:22px;padding:18px;margin-top:10px;
-  box-shadow:0 10px 30px rgba(0,0,0,.08);
-}
-.field{padding:10px 0;border-bottom:1px solid var(--border)}
-.field:last-child{border-bottom:none}
-.label{font-size:.75rem;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:.3px}
-.value{font-size:1.05rem;font-weight:900}
-.loading{
-  background:#fff;border-radius:22px;padding:26px 18px;box-shadow:0 10px 30px rgba(0,0,0,.08);
-  text-align:center;
-}
-.spinner{
-  width:56px;height:56px;margin:0 auto 12px;border-radius:50%;
-  border:4px solid rgba(255,196,214,.55);border-top:4px solid #ff9bb5;
-  animation:spin 1s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.tiny{margin-top:10px;font-size:.9rem;color:#777}
-.errorBox{
-  background:var(--dangerBg);border-radius:22px;padding:18px;text-align:center;
-  font-weight:900;color:var(--dangerText);
-}
-.okBox{
-  background:var(--okBg);border-radius:22px;padding:14px 16px;text-align:center;
-  font-weight:900;color:var(--okText);margin-bottom:10px;
-}
-</style>
-</head>
 
-<body>
-<div class="container">
-
-<section id="home" class="screen active">
-  <div class="logo"><img src="logopaloh.png" alt="Logo SMK Paloh"></div>
-  <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
-  <p class="subtitle">Pilih Tingkatan → Masuk No IC → Semak → Papar Maklumat</p>
-
-  <div class="grid">
-    <button class="pill" id="btnT2" type="button">Tingkatan 2</button>
-    <button class="pill" id="btnT3" type="button">Tingkatan 3</button>
-    <button class="pill" id="btnT4" type="button">Tingkatan 4</button>
-    <button class="pill secondary" id="btnBuku" type="button">Senarai Pembelian Buku (PDF)</button>
-  </div>
-
-  <div class="tiny">Tip: Boleh paste IC yang ada dash (-), sistem auto buang.</div>
-</section>
-
-<section id="input" class="screen">
-  <div class="header">
-    <div class="badge" id="badgeTing">Tingkatan</div>
-    <h2 class="title" style="font-size:1.25rem;">Masukkan No IC</h2>
-    <p class="subtitle">Contoh: 051234567890 (12 digit)</p>
-  </div>
-
-  <div class="input-wrap">
-    <input id="ic" class="input" inputmode="numeric" maxlength="25" placeholder="No IC 12 digit">
-    <div class="row">
-      <button class="pill" id="btnSemak" type="button">Semak</button>
-      <button class="pill secondary" id="btnBackHome1" type="button">Kembali</button>
-    </div>
-  </div>
-</section>
-
-<section id="loading" class="screen">
-  <div class="loading">
-    <div class="spinner"></div>
-    <div style="font-weight:900; font-size:1.05rem;">Menyemak maklumat...</div>
-    <div class="tiny">Sekejap ya 😄</div>
-  </div>
-</section>
-
-<section id="result" class="screen">
-  <div class="header">
-    <div class="badge" id="badgeResult">Keputusan</div>
-    <h2 class="title" style="font-size:1.25rem;">Maklumat Pelajar</h2>
-    <p class="subtitle">Maklumat dijumpai.</p>
-  </div>
-
-  <div class="okBox">✅ Rekod Dijumpai</div>
-  <div id="resultBox" class="card"></div>
-
-  <div class="row" style="margin-top:14px;">
-    <button class="pill secondary" id="btnBackHome2" type="button">Kembali (Main Page)</button>
-  </div>
-</section>
-
-<section id="error" class="screen">
-  <div class="errorBox" id="errorMsg">Ada masalah.</div>
-  <div class="row" style="margin-top:14px;">
-    <button class="pill secondary" id="btnTryAgain" type="button">Cuba Lagi</button>
-    <button class="pill secondary" id="btnBackHome3" type="button">Kembali (Main Page)</button>
-  </div>
-</section>
-
-</div>
-
-<script>
-// ===== DEBUG BAR (confirm JS hidup & click masuk) =====
-(function(){
-  const bar = document.createElement("div");
-  bar.style.cssText = `
-    position:fixed; top:10px; left:10px; z-index:999999;
-    background:#000; color:#fff; padding:8px 10px; border-radius:12px;
-    font: 800 12px/1.2 Segoe UI, sans-serif; opacity:.85
-  `;
-  bar.textContent = "JS LOADED ✅";
-  document.body.appendChild(bar);
-
-  window.addEventListener("error", (e)=>{
-    bar.textContent = "JS ERROR ❌ " + (e?.message || "unknown");
-    console.error(e);
+function buildHeaderMap_(headers) {
+  // map headerName -> colIndex (1-based)
+  const map = {};
+  headers.forEach((h, idx) => {
+    const key = String(h || "").trim().toUpperCase();
+    if (key) map[key] = idx + 1;
   });
-  window.addEventListener("unhandledrejection", (e)=>{
-    bar.textContent = "PROMISE ERROR ❌ " + (e?.reason?.message || e?.reason || "unknown");
-    console.error(e);
-  });
-  document.addEventListener("click", (ev)=>{
-    if(ev.target && ev.target.tagName === "BUTTON"){
-      bar.textContent = "CLICK ✅ " + (ev.target.id || ev.target.textContent.trim());
+
+  // Pastikan key standard wujud walaupun header ada spaces kecil
+  // e.g "GURU_TINGKATAN_2026"
+  return map;
+}
+
+function sampleLooksLikeIC_(values, colIndex) {
+  // check 10 row pertama: kalau banyak yang 12-digit, ok
+  const n = Math.min(values.length, 10);
+  let hits = 0;
+  for (let i = 0; i < n; i++) {
+    const v = normalizeIC_(values[i][colIndex - 1]);
+    if (v && v.length === 12) hits++;
+  }
+  return hits >= Math.max(2, Math.floor(n / 3)); // cukup munasabah
+}
+
+function detectICColumnByMatchingInput_(values, ic) {
+  // scan semua col, cari col yang ada exact match IC
+  if (!values.length) return null;
+  const colCount = values[0].length;
+
+  for (let c = 1; c <= colCount; c++) {
+    for (let r = 0; r < values.length; r++) {
+      const cell = normalizeIC_(values[r][c - 1]);
+      if (cell === ic) return c;
     }
-  }, true);
-})();
-
-// ✅ API URL (Apps Script Web App /exec)
-const apiUrl = "https://script.google.com/macros/s/AKfycby0LB5uKp4eFTvEhwKy5aGAGqriWSanOQZHIbTNAHS7pl6S4G2CdEBovk88SmCqxy7A/exec";
-
-// ✅ optional pdf buku dalam repo
-const SENARAI_BUKU_URL = "senarai_pembelian_buku.pdf";
-
-let tingkatan = null;
-
-function $(id){ return document.getElementById(id); }
-
-function show(id){
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  const el = $(id);
-  if(el) el.classList.add("active");
-}
-
-function goHome(){
-  tingkatan = null;
-  const ic = $("ic");
-  if(ic) ic.value = "";
-  show("home");
-}
-
-function backToInput(){
-  show("input");
-  setTimeout(()=> $("ic")?.focus(), 80);
-}
-
-function start(t){
-  tingkatan = t;
-  $("badgeTing").innerText = "Tingkatan " + t;
-  $("ic").value = "";
-  show("input");
-  setTimeout(()=> $("ic")?.focus(), 80);
-}
-
-function openSenaraiBuku(){
-  window.open(SENARAI_BUKU_URL, "_blank", "noopener");
-}
-
-function cleanIC(v){ return (v || "").replace(/\D/g, ""); }
-
-function esc(s){
-  return String(s ?? "-")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-function showError(msg){
-  $("errorMsg").textContent = msg || "Ada masalah.";
-  show("error");
-}
-
-async function semak(){
-  if(!tingkatan){
-    showError("Sila pilih Tingkatan dahulu.");
-    return;
   }
 
-  const icEl = $("ic");
-  const ic = cleanIC(icEl.value);
-  icEl.value = ic;
-
-  if(ic.length !== 12){
-    showError("No IC mesti 12 digit (tanpa simbol -).");
-    return;
-  }
-
-  show("loading");
-
-  // IMPORTANT: add nocache to avoid cached response
-  const url = `${apiUrl}?mode=kelas&ting=${encodeURIComponent(tingkatan)}&ic=${encodeURIComponent(ic)}&t=${Date.now()}`;
-
-  try{
-    const res = await fetch(url, { method:"GET", cache:"no-store" });
-    const text = await res.text();
-
-    // kadang-kadang Apps Script return HTML (login page) -> JSON parse fail
-    let data;
-    try{
-      data = JSON.parse(text);
-    }catch(_){
-      console.log("RAW RESPONSE:", text);
-      showError("Apps Script balas HTML (bukan JSON). Pastikan Web App access = Anyone.");
-      return;
+  // fallback 2: cari col yang nampak banyak 12-digit
+  let bestCol = null;
+  let bestScore = 0;
+  for (let c = 1; c <= colCount; c++) {
+    let score = 0;
+    const n = Math.min(values.length, 30);
+    for (let r = 0; r < n; r++) {
+      const cell = normalizeIC_(values[r][c - 1]);
+      if (cell && cell.length === 12) score++;
     }
-
-    if(!data || data.ok === false){
-      showError(data?.message || "Rekod tidak dijumpai.");
-      return;
+    if (score > bestScore) {
+      bestScore = score;
+      bestCol = c;
     }
-
-    $("badgeResult").innerText = `Tingkatan ${tingkatan} • Keputusan`;
-
-    $("resultBox").innerHTML = `
-      <div class="field"><div class="label">Nama Pelajar</div><div class="value">${esc(data.nama)}</div></div>
-      <div class="field"><div class="label>No IC</div><div class="value">${esc(data.ic)}</div></div>
-      <div class="field"><div class="label">Jantina</div><div class="value">${esc(data.jantina)}</div></div>
-      <div class="field"><div class="label">Kelas 2025</div><div class="value">${esc(data.kelas_2025)}</div></div>
-      <div class="field"><div class="label">Kelas 2026</div><div class="value">${esc(data.kelas_2026)}</div></div>
-      <div class="field"><div class="label">Guru Tingkatan 2026</div><div class="value">${esc(data.guru_tingkatan_2026)}</div></div>
-    `;
-
-    show("result");
-  }catch(e){
-    console.error(e);
-    showError("Tak dapat connect ke server / Apps Script. Cuba lagi.");
   }
+  return bestScore >= 3 ? bestCol : null;
 }
 
-// ===== Attach events (no DOMContentLoaded needed) =====
-function on(id, fn){
-  const el = $(id);
-  if(!el){ console.warn("Missing element:", id); return; }
-  el.addEventListener("click", fn);
+function findRowByIC_(values, icCol, ic) {
+  for (let i = 0; i < values.length; i++) {
+    const cell = normalizeIC_(values[i][icCol - 1]);
+    if (cell === ic) return i;
+  }
+  return -1;
 }
 
-on("btnT2", () => start(2));
-on("btnT3", () => start(3));
-on("btnT4", () => start(4));
-on("btnBuku", openSenaraiBuku);
+function normalizeIC_(v) {
+  let s = String(v ?? "").trim().replace(/[^\d]/g, "");
+  if (s && s.length < 12) s = s.padStart(12, "0");
+  return s;
+}
 
-on("btnSemak", semak);
-
-on("btnBackHome1", goHome);
-on("btnBackHome2", goHome);
-on("btnBackHome3", goHome);
-
-on("btnTryAgain", backToInput);
-</script>
-
-</body>
-</html>
+function json_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
