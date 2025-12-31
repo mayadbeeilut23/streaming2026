@@ -106,6 +106,7 @@ body{
 <body>
 <div class="container">
 
+<!-- HOME -->
 <section id="home" class="screen active">
   <div class="logo"><img src="logopaloh.png" alt="Logo SMK Paloh"></div>
   <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
@@ -121,6 +122,7 @@ body{
   <div class="tiny">Tip: Boleh paste IC yang ada dash (-), sistem auto buang.</div>
 </section>
 
+<!-- INPUT -->
 <section id="input" class="screen">
   <div class="header">
     <div class="badge" id="badgeTing">Tingkatan</div>
@@ -137,6 +139,7 @@ body{
   </div>
 </section>
 
+<!-- LOADING -->
 <section id="loading" class="screen">
   <div class="loading">
     <div class="spinner"></div>
@@ -145,6 +148,7 @@ body{
   </div>
 </section>
 
+<!-- RESULT -->
 <section id="result" class="screen">
   <div class="header">
     <div class="badge" id="badgeResult">Keputusan</div>
@@ -160,6 +164,7 @@ body{
   </div>
 </section>
 
+<!-- ERROR -->
 <section id="error" class="screen">
   <div class="errorBox" id="errorMsg">Ada masalah.</div>
   <div class="row" style="margin-top:14px;">
@@ -171,58 +176,150 @@ body{
 </div>
 
 <script>
+// ====== WEBAPP URL (Apps Script) ======
 const WEBAPP = "https://script.google.com/macros/s/AKfycby0LB5uKp4eFTvEhwKy5aGAGqriWSanOQZHIbTNAHS7pl6S4G2CdEBovk88SmCqxy7A/exec";
 
-// ambil parameter dari URL page (contoh: ?ting=2&ic=1207...)
-const params = new URLSearchParams(window.location.search);
-const ting = (params.get("ting") || params.get("tingkatan") || "").trim();
-const ic   = (params.get("ic") || "").trim();
-
-// function kecil untuk set text
-function setText(id, val) {
+// ====== NAV SCREEN ======
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   const el = document.getElementById(id);
-  if (el) el.textContent = (val && val !== "") ? val : "-";
+  if (el) el.classList.add("active");
 }
 
-async function loadData() {
-  // pastikan ada input
-  if (!ting || !ic) {
-    setText("icValue", "-");
-    setText("namaValue", "-");
-    setText("kelas2025Value", "-");
-    setText("kelas2026Value", "-");
-    setText("jantinaValue", "-");
-    setText("guruValue", "-");
+// ====== STATE ======
+let selectedTing = "";
+
+// ====== ELEMENTS ======
+const badgeTing = document.getElementById("badgeTing");
+const badgeResult = document.getElementById("badgeResult");
+const icInput = document.getElementById("ic");
+const resultBox = document.getElementById("resultBox");
+const errorMsg = document.getElementById("errorMsg");
+
+// Buttons
+const btnT2 = document.getElementById("btnT2");
+const btnT3 = document.getElementById("btnT3");
+const btnT4 = document.getElementById("btnT4");
+const btnBuku = document.getElementById("btnBuku");
+
+const btnSemak = document.getElementById("btnSemak");
+const btnBackHome1 = document.getElementById("btnBackHome1");
+
+const btnBackHome2 = document.getElementById("btnBackHome2");
+
+const btnTryAgain = document.getElementById("btnTryAgain");
+const btnBackHome3 = document.getElementById("btnBackHome3");
+
+// ====== HELPERS ======
+function normalizeIC(v){
+  let s = String(v || "").trim().replace(/[^\d]/g, "");
+  if (s && s.length < 12) s = s.padStart(12, "0");
+  return s;
+}
+
+function buildResultHTML(data){
+  // JSON dari Apps Script u return KEY HURUF BESAR:
+  // IC, NAMA, KELAS_2025, KELAS_2026, JANTINA, GURU_TINGKATAN_2026
+  const rows = [
+    ["IC", data.IC],
+    ["NAMA", data.NAMA],
+    ["KELAS 2025", data.KELAS_2025],
+    ["KELAS 2026", data.KELAS_2026],
+    ["JANTINA", data.JANTINA],
+    ["GURU TINGKATAN 2026", data.GURU_TINGKATAN_2026],
+  ];
+
+  return rows.map(([label, value]) => `
+    <div class="field">
+      <div class="label">${label}</div>
+      <div class="value">${(value && String(value).trim() !== "") ? value : "-"}</div>
+    </div>
+  `).join("");
+}
+
+// ====== HOME -> INPUT ======
+function goInput(ting){
+  selectedTing = String(ting);
+  badgeTing.textContent = `Tingkatan ${selectedTing}`;
+  icInput.value = "";
+  showScreen("input");
+  setTimeout(() => icInput.focus(), 50);
+}
+
+btnT2.addEventListener("click", () => goInput("2"));
+btnT3.addEventListener("click", () => goInput("3"));
+btnT4.addEventListener("click", () => goInput("4"));
+
+// PDF (tukar ikut nama file PDF u dalam folder GitHub)
+btnBuku.addEventListener("click", () => {
+  window.open("senarai_buku.pdf", "_blank");
+});
+
+// ====== BACK HOME ======
+function backHome(){
+  selectedTing = "";
+  showScreen("home");
+}
+btnBackHome1.addEventListener("click", backHome);
+btnBackHome2.addEventListener("click", backHome);
+btnBackHome3.addEventListener("click", backHome);
+
+// ====== TRY AGAIN ======
+btnTryAgain.addEventListener("click", () => {
+  showScreen("input");
+  setTimeout(() => icInput.focus(), 50);
+});
+
+// ====== SEMAK ======
+btnSemak.addEventListener("click", async () => {
+  const ic = normalizeIC(icInput.value);
+
+  if (!selectedTing){
+    errorMsg.textContent = "Tingkatan belum dipilih. Sila pilih Tingkatan 2/3/4.";
+    showScreen("error");
     return;
   }
 
-  const url = `${WEBAPP}?mode=kelas&ting=${encodeURIComponent(ting)}&ic=${encodeURIComponent(ic)}`;
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if (!data.ok) {
-    // kalau tak jumpa, biar dash
-    setText("icValue", "-");
-    setText("namaValue", "-");
-    setText("kelas2025Value", "-");
-    setText("kelas2026Value", "-");
-    setText("jantinaValue", "-");
-    setText("guruValue", "-");
+  if (!ic){
+    errorMsg.textContent = "IC kosong. Sila masukkan IC 12 digit.";
+    showScreen("error");
     return;
   }
 
-  // ✅ PENTING: guna KEY HURUF BESAR ikut JSON u
-  setText("icValue", data.IC);
-  setText("namaValue", data.NAMA);
-  setText("kelas2025Value", data.KELAS_2025);
-  setText("kelas2026Value", data.KELAS_2026);
-  setText("jantinaValue", data.JANTINA);
-  setText("guruValue", data.GURU_TINGKATAN_2026);
-}
+  if (ic.length !== 12){
+    errorMsg.textContent = "IC mesti 12 digit. Contoh: 051234567890";
+    showScreen("error");
+    return;
+  }
 
-loadData();
+  showScreen("loading");
+
+  try{
+    const url = `${WEBAPP}?mode=kelas&ting=${encodeURIComponent(selectedTing)}&ic=${encodeURIComponent(ic)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.ok){
+      errorMsg.textContent = data.message || "Rekod tidak dijumpai.";
+      showScreen("error");
+      return;
+    }
+
+    badgeResult.textContent = `Tingkatan ${selectedTing} • Keputusan`;
+    resultBox.innerHTML = buildResultHTML(data);
+    showScreen("result");
+
+  }catch(err){
+    errorMsg.textContent = "Gagal sambung ke server. Sila cuba lagi. (" + err.message + ")";
+    showScreen("error");
+  }
+});
+
+// Enter key untuk semak
+icInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") btnSemak.click();
+});
 </script>
-
 
 </body>
 </html>
