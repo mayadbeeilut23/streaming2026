@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="ms">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sistem Semakan Kedudukan Kelas</title>
 
 <style>
@@ -17,12 +17,14 @@
   --border:#eee;
   --dangerBg:#ffe5e5;
   --dangerText:#b30000;
+  --okBg:#e9fff4;
+  --okText:#0f7a4a;
 }
 
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Segoe UI, sans-serif;
+  font-family:Segoe UI, system-ui, -apple-system, Arial, sans-serif;
   background:linear-gradient(135deg,var(--bg1),var(--bg2));
   min-height:100vh;
   display:flex;
@@ -31,7 +33,7 @@ body{
   padding:24px;
   color:var(--text);
 }
-.container{max-width:520px;width:100%}
+.container{max-width:560px;width:100%}
 
 .screen{display:none}
 .screen.active{display:block}
@@ -53,10 +55,10 @@ body{
   border-radius:22px;display:flex;align-items:center;justify-content:center;
   box-shadow:0 10px 30px rgba(0,0,0,.08);
 }
-.logo img{width:90px;height:auto;display:block}
+.logo img{width:92px;height:auto;display:block}
 
-.title{text-align:center;font-weight:800;margin:0}
-.subtitle{text-align:center;color:var(--muted);margin:8px 0 0}
+.title{text-align:center;font-weight:900;margin:0}
+.subtitle{text-align:center;color:var(--muted);margin:8px 0 0; line-height:1.35}
 
 .grid{display:flex;flex-direction:column;gap:12px; margin-top:18px;}
 
@@ -65,15 +67,26 @@ body{
   border:none;
   border-radius:999px;
   padding:16px 18px;
-  font-weight:800;
+  font-weight:900;
   cursor:pointer;
   background:linear-gradient(135deg,var(--primary),var(--secondary));
   color:var(--text);
-  box-shadow: 0 8px 20px rgba(255,196,214,.35);
+  box-shadow: 0 10px 22px rgba(255,196,214,.35);
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
 }
+.pill:hover{
+  transform: scale(1.03);
+  box-shadow: 0 14px 30px rgba(255,196,214,.55);
+  filter: saturate(1.03);
+}
+.pill:active{ transform: scale(.98); }
+
 .pill.secondary{
-  background:#eee;
-  box-shadow: 0 8px 18px rgba(0,0,0,.08);
+  background:#f1f1f1;
+  box-shadow: 0 10px 22px rgba(0,0,0,.10);
+}
+.pill.secondary:hover{
+  box-shadow: 0 14px 30px rgba(0,0,0,.14);
 }
 
 .input-wrap{
@@ -108,9 +121,9 @@ body{
 .field{padding:10px 0;border-bottom:1px solid var(--border)}
 .field:last-child{border-bottom:none}
 .label{font-size:.75rem;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:.3px}
-.value{font-size:1.05rem;font-weight:800}
+.value{font-size:1.05rem;font-weight:900}
 
-/* ✅ LOADING COMEL */
+/* loading */
 .loading{
   background:#fff;
   border-radius:22px;
@@ -126,9 +139,9 @@ body{
   animation: spin 1s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-.tiny{margin-top:8px;font-size:.9rem;color:#777}
+.tiny{margin-top:10px;font-size:.9rem;color:#777}
 
-/* optional: error */
+/* error */
 .errorBox{
   background:var(--dangerBg);
   border-radius:22px;
@@ -136,6 +149,15 @@ body{
   text-align:center;
   font-weight:900;
   color:var(--dangerText);
+}
+.okBox{
+  background:var(--okBg);
+  border-radius:22px;
+  padding:14px 16px;
+  text-align:center;
+  font-weight:900;
+  color:var(--okText);
+  margin-bottom:10px;
 }
 </style>
 </head>
@@ -145,20 +167,26 @@ body{
 
 <!-- HOME -->
 <section id="home" class="screen active">
-  <div class="logo"><img src="logopaloh.png" alt="Logo SMK Paloh"></div>
+  <div class="logo">
+    <!-- letak logopaloh.png dalam repo yang sama -->
+    <img src="logopaloh.png" alt="Logo SMK Paloh">
+  </div>
+
   <h1 class="title">Sistem Semakan Kedudukan Kelas</h1>
-  <p class="subtitle">Pilih Tingkatan → Masuk No IC → Semak → Papar Result</p>
+  <p class="subtitle">Pilih Tingkatan → Masuk No IC → Semak → Papar Maklumat</p>
 
-
-  <!-- BUTTON PILL -->
   <div class="grid">
     <button class="pill" type="button" onclick="start(2)">Tingkatan 2</button>
     <button class="pill" type="button" onclick="start(3)">Tingkatan 3</button>
     <button class="pill" type="button" onclick="start(4)">Tingkatan 4</button>
-    <button class="pill secondary" type="button" onclick="openSenaraiBuku()">Senarai Pembelian Buku</button>
+
+    <!-- optional PDF buku -->
+    <button class="pill secondary" type="button" onclick="openSenaraiBuku()">
+      Senarai Pembelian Buku (PDF)
+    </button>
   </div>
 
-  <div class="tiny">Tip: No IC tanpa simbol -</div>
+  <div class="tiny">Tip: Boleh paste IC yang ada dash (-), sistem akan auto buang.</div>
 </section>
 
 <!-- INPUT -->
@@ -170,7 +198,7 @@ body{
   </div>
 
   <div class="input-wrap">
-    <input id="ic" class="input" inputmode="numeric" maxlength="14" placeholder="No IC 12 digit (tanpa -)">
+    <input id="ic" class="input" inputmode="numeric" maxlength="20" placeholder="No IC 12 digit">
     <div class="row">
       <button class="pill" type="button" onclick="semak()">Semak</button>
       <button class="pill secondary" type="button" onclick="goHome()">Kembali</button>
@@ -178,7 +206,7 @@ body{
   </div>
 </section>
 
-<!-- ✅ LOADING -->
+<!-- LOADING -->
 <section id="loading" class="screen">
   <div class="loading">
     <div class="spinner"></div>
@@ -191,148 +219,5 @@ body{
 <section id="result" class="screen">
   <div class="header">
     <div class="badge" id="badgeResult">Keputusan</div>
-    <h2 class="title" style="font-size:1.25rem;">Papar Maklumat</h2>
-    <p class="subtitle">Berjaya! Maklumat dijumpai.</p>
-  </div>
-
-  <div id="resultBox" class="card"></div>
-
-  <div class="row" style="margin-top:14px;">
-    <button class="pill secondary" type="button" onclick="goHome()">Kembali (Main Page)</button>
-  </div>
-</section>
-
-<!-- ERROR -->
-<section id="error" class="screen">
-  <div class="errorBox" id="errorMsg">Ada masalah.</div>
-  <div class="row" style="margin-top:14px;">
-    <button class="pill secondary" type="button" onclick="goHome()">Kembali (Main Page)</button>
-  </div>
-</section>
-
-</div>
-
-<script>
-const apiUrl="https://script.google.com/macros/s/AKfycbxJzukkZf4P8Y8cA3WrSVp6ISkvXhMgsqzjVElhfW4_SBPafEt0_lsnkCM17_NF1SsO/exec";
-
-/* ✅ tukar nama ikut file dalam repo you */
-const SENARAI_BUKU_URL = "senarai_pembelian_buku.pdf";
-
-let tingkatan=null;
-
-function show(id){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  const el=document.getElementById(id);
-  if(el) el.classList.add("active");
-}
-
-function goHome(){
-  tingkatan=null;
-  const ic=document.getElementById("ic");
-  if(ic) ic.value="";
-  show("home");
-}
-
-function start(t){
-  tingkatan=t;
-  document.getElementById("badgeTing").innerText="Tingkatan "+t;
-  document.getElementById("ic").value="";
-  show("input");
-  setTimeout(()=>document.getElementById("ic").focus(),80);
-}
-
-function openSenaraiBuku(){
-  window.open(SENARAI_BUKU_URL, "_blank");
-}
-
-function cleanIC(v){ return (v||"").replace(/\D/g,""); }
-
-function esc(s){
-  return String(s ?? "-")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-function showError(msg){
-  document.getElementById("errorMsg").textContent = msg || "Ada masalah.";
-  show("error");
-}
-
-async function semak(){
-  if(!tingkatan){
-    showError("Sila pilih Tingkatan dahulu.");
-    return;
-  }
-
-  const icEl=document.getElementById("ic");
-  const ic=cleanIC(icEl.value);
-  icEl.value=ic;
-
-  if(ic.length!==12){
-    showError("No IC mesti 12 digit (tanpa simbol -).");
-    return;
-  }
-
-  show("loading");
-
-  const url=`${apiUrl}?ting=${encodeURIComponent(tingkatan)}&mode=kelas&ic=${encodeURIComponent(ic)}`;
-
-  try{
-    const res=await fetch(url,{method:"GET"});
-    const data=await res.json();
-
-    if(!data || data.ok===false){
-      showError(data?.message || "Rekod tidak dijumpai.");
-      return;
-    }
-      
-
-
-    
-    document.getElementById("badgeResult").innerText = `Tingkatan ${tingkatan} • Keputusan`;
-
-const common = `
-  <div class="field"><div class="label">Nama</div><div class="value">${esc(data.nama)}</div></div>
-  <div class="field"><div class="label">Jantina</div><div class="value">${esc(data.jantina)}</div></div>
-  <div class="field"><div class="label">Bangsa</div><div class="value">${esc(data.bangsa)}</div></div>
-  <div class="field"><div class="label">Kelas 2025</div><div class="value">${esc(data.kelas_2025)}</div></div>
-  <div class="field"><div class="label">Kelas 2026</div><div class="value">${esc(data.kelas_2026)}</div></div>
-  <div class="field"><div class="label">Guru Tingkatan 2026</div><div class="value">${esc(data.guru_tingkatan_2026)}</div></div>
-`;
-
-const t2t3 = `
-  <div class="field"><div class="label">KDK</div><div class="value">${esc(data.kdk)}</div></div>
-  <div class="field"><div class="label">KDT</div><div class="value">${esc(data.kdt)}</div></div>
-`;
-
-const t4extra = `
-  <div class="field"><div class="label">BIL</div><div class="value">${esc(data.bil)}</div></div>
-`;
-
-document.getElementById("resultBox").innerHTML =
-  (tingkatan === 4 ? (t4extra + common) : (common.slice(0,0) + `
-    <div class="field"><div class="label">Nama</div><div class="value">${esc(data.nama)}</div></div>
-    <div class="field"><div class="label">Jantina</div><div class="value">${esc(data.jantina)}</div></div>
-    <div class="field"><div class="label">Bangsa</div><div class="value">${esc(data.bangsa)}</div></div>
-    ${t2t3}
-    <div class="field"><div class="label">Kelas 2025</div><div class="value">${esc(data.kelas_2025)}</div></div>
-    <div class="field"><div class="label">Kelas 2026</div><div class="value">${esc(data.kelas_2026)}</div></div>
-    <div class="field"><div class="label">Guru Tingkatan 2026</div><div class="value">${esc(data.guru_tingkatan_2026)}</div></div>
-  `));
-
-
-
-
-
-  }catch(e){
-    console.error(e);
-    showError("Tak dapat connect ke server / Apps Script. Cuba lagi.");
-  }
-}
-</script>
-
-</body>
-</html>
+    <h2 class="title" style="font-size:1.25rem;">Maklumat Pelajar</h2>
+    <p class="subtitle
