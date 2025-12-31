@@ -183,3 +183,152 @@ body{
 
   window.addEventListener("error", (e)=>{
     bar.textContent = "JS ERROR ❌ " + (e?.message || "unknown");
+    console.error(e);
+  });
+  window.addEventListener("unhandledrejection", (e)=>{
+    bar.textContent = "PROMISE ERROR ❌ " + (e?.reason?.message || e?.reason || "unknown");
+    console.error(e);
+  });
+  document.addEventListener("click", (ev)=>{
+    if(ev.target && ev.target.tagName === "BUTTON"){
+      bar.textContent = "CLICK ✅ " + (ev.target.id || ev.target.textContent.trim());
+    }
+  }, true);
+})();
+
+// ✅ API URL (Apps Script Web App /exec)
+const apiUrl = "https://script.google.com/macros/s/AKfycbxJzukkZf4P8Y8cA3WrSVp6ISkvXhMgsqzjVElhfW4_SBPafEt0_lsnkCM17_NF1SsO/exec";
+
+// ✅ optional pdf buku dalam repo
+const SENARAI_BUKU_URL = "senarai_pembelian_buku.pdf";
+
+let tingkatan = null;
+
+function $(id){ return document.getElementById(id); }
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  const el = $(id);
+  if(el) el.classList.add("active");
+}
+
+function goHome(){
+  tingkatan = null;
+  const ic = $("ic");
+  if(ic) ic.value = "";
+  show("home");
+}
+
+function backToInput(){
+  show("input");
+  setTimeout(()=> $("ic")?.focus(), 80);
+}
+
+function start(t){
+  tingkatan = t;
+  $("badgeTing").innerText = "Tingkatan " + t;
+  $("ic").value = "";
+  show("input");
+  setTimeout(()=> $("ic")?.focus(), 80);
+}
+
+function openSenaraiBuku(){
+  window.open(SENARAI_BUKU_URL, "_blank", "noopener");
+}
+
+function cleanIC(v){ return (v || "").replace(/\D/g, ""); }
+
+function esc(s){
+  return String(s ?? "-")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function showError(msg){
+  $("errorMsg").textContent = msg || "Ada masalah.";
+  show("error");
+}
+
+async function semak(){
+  if(!tingkatan){
+    showError("Sila pilih Tingkatan dahulu.");
+    return;
+  }
+
+  const icEl = $("ic");
+  const ic = cleanIC(icEl.value);
+  icEl.value = ic;
+
+  if(ic.length !== 12){
+    showError("No IC mesti 12 digit (tanpa simbol -).");
+    return;
+  }
+
+  show("loading");
+
+  // IMPORTANT: add nocache to avoid cached response
+  const url = `${apiUrl}?mode=kelas&ting=${encodeURIComponent(tingkatan)}&ic=${encodeURIComponent(ic)}&t=${Date.now()}`;
+
+  try{
+    const res = await fetch(url, { method:"GET", cache:"no-store" });
+    const text = await res.text();
+
+    // kadang-kadang Apps Script return HTML (login page) -> JSON parse fail
+    let data;
+    try{
+      data = JSON.parse(text);
+    }catch(_){
+      console.log("RAW RESPONSE:", text);
+      showError("Apps Script balas HTML (bukan JSON). Pastikan Web App access = Anyone.");
+      return;
+    }
+
+    if(!data || data.ok === false){
+      showError(data?.message || "Rekod tidak dijumpai.");
+      return;
+    }
+
+    $("badgeResult").innerText = `Tingkatan ${tingkatan} • Keputusan`;
+
+    $("resultBox").innerHTML = `
+      <div class="field"><div class="label">Nama Pelajar</div><div class="value">${esc(data.nama)}</div></div>
+      <div class="field"><div class="label>No IC</div><div class="value">${esc(data.ic)}</div></div>
+      <div class="field"><div class="label">Jantina</div><div class="value">${esc(data.jantina)}</div></div>
+      <div class="field"><div class="label">Kelas 2025</div><div class="value">${esc(data.kelas_2025)}</div></div>
+      <div class="field"><div class="label">Kelas 2026</div><div class="value">${esc(data.kelas_2026)}</div></div>
+      <div class="field"><div class="label">Guru Tingkatan 2026</div><div class="value">${esc(data.guru_tingkatan_2026)}</div></div>
+    `;
+
+    show("result");
+  }catch(e){
+    console.error(e);
+    showError("Tak dapat connect ke server / Apps Script. Cuba lagi.");
+  }
+}
+
+// ===== Attach events (no DOMContentLoaded needed) =====
+function on(id, fn){
+  const el = $(id);
+  if(!el){ console.warn("Missing element:", id); return; }
+  el.addEventListener("click", fn);
+}
+
+on("btnT2", () => start(2));
+on("btnT3", () => start(3));
+on("btnT4", () => start(4));
+on("btnBuku", openSenaraiBuku);
+
+on("btnSemak", semak);
+
+on("btnBackHome1", goHome);
+on("btnBackHome2", goHome);
+on("btnBackHome3", goHome);
+
+on("btnTryAgain", backToInput);
+</script>
+
+</body>
+</html>
