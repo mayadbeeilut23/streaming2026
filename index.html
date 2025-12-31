@@ -113,7 +113,6 @@ body{
   <p class="subtitle">Pilih Tingkatan → Masuk No IC → Semak → Papar Maklumat</p>
 
   <div class="grid">
-    <!-- fallback onclick (kalau eventListener tak attach) -->
     <button class="pill" id="btnT2" type="button" onclick="goInput('2')">Tingkatan 2</button>
     <button class="pill" id="btnT3" type="button" onclick="goInput('3')">Tingkatan 3</button>
     <button class="pill" id="btnT4" type="button" onclick="goInput('4')">Tingkatan 4</button>
@@ -176,20 +175,25 @@ body{
 
 </div>
 
+<!-- ✅ BGM: autoplay + loop
+     Note: muted untuk bypass autoplay restriction.
+     Akan auto-unmute bila user first click/scroll/keydown -->
+<audio id="bgm" src="lagu.mp3" autoplay loop muted preload="auto"></audio>
+
 <script>
-// ====== PENTING: letak global supaya onclick boleh panggil ======
+// ====== WEBAPP URL (Apps Script) ======
 const WEBAPP = "https://script.google.com/macros/s/AKfycby0LB5uKp4eFTvEhwKy5aGAGqriWSanOQZHIbTNAHS7pl6S4G2CdEBovk88SmCqxy7A/exec";
 
 let selectedTing = "";
 
-// ----- NAV SCREEN -----
+// ====== NAV SCREEN ======
 function showScreen(id){
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   const el = document.getElementById(id);
   if (el) el.classList.add("active");
 }
 
-// ----- HELPERS -----
+// ====== HELPERS ======
 function normalizeIC(v){
   let s = String(v || "").trim().replace(/[^\d]/g, "");
   if (s && s.length < 12) s = s.padStart(12, "0");
@@ -213,7 +217,7 @@ function buildResultHTML(data){
   `).join("");
 }
 
-// ====== ACTIONS (dipanggil oleh onclick juga) ======
+// ====== ACTIONS ======
 function goInput(ting){
   selectedTing = String(ting);
   const badgeTing = document.getElementById("badgeTing");
@@ -235,14 +239,14 @@ function tryAgain(){
   setTimeout(() => icInput && icInput.focus(), 50);
 }
 
+// ✅ PDF: ikut nama yang u nak
 function openBuku(){
-  window.open("senarai_buku.pdf", "_blank");
+  window.open("senarai_pembelian_buku.pdf", "_blank");
 }
 
 async function semak(){
   const icInput = document.getElementById("ic");
   const ic = normalizeIC(icInput ? icInput.value : "");
-
   const errorMsg = document.getElementById("errorMsg");
 
   if (!selectedTing){
@@ -290,7 +294,33 @@ async function semak(){
   }
 }
 
-// ====== EXTRA: kalau tekan Enter dalam input IC ======
+// ====== AUTOPLAY BGM + AUTO-UNMUTE FALLBACK ======
+(function autoBGM(){
+  const bgm = document.getElementById("bgm");
+  if (!bgm) return;
+
+  bgm.volume = 0.35;
+
+  // cuba play terus (akan berjaya jika browser allow)
+  bgm.play().catch(() => {
+    // jika block: tunggu first interaction, then unmute & play
+    const resume = () => {
+      bgm.muted = false;
+      bgm.play().catch(()=>{});
+    };
+    window.addEventListener("pointerdown", resume, { once:true });
+    window.addEventListener("keydown", resume, { once:true });
+    window.addEventListener("scroll", resume, { once:true });
+    window.addEventListener("touchstart", resume, { once:true });
+  });
+
+  // bila user kembali ke tab, sambung balik
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) bgm.play().catch(()=>{});
+  });
+})();
+
+// Enter key untuk semak
 document.addEventListener("DOMContentLoaded", () => {
   const icInput = document.getElementById("ic");
   if (icInput){
